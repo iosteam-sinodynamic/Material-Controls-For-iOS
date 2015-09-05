@@ -23,7 +23,7 @@
 #import <UIKit/UIKit.h>
 
 #define kMDTabBarHeight 48
-#define kMDIndicatorHeight 2
+#define kMDIndicatorHeight 5
 
 @class MDTabBar;
 
@@ -33,13 +33,13 @@
 
 @end
 
-IB_DESIGNABLE
+
 @interface MDTabBar : UIControl
 
-@property(nonatomic) IBInspectable UIColor *textColor;
-@property(nonatomic) IBInspectable UIColor *backgroundColor;
-@property(nonatomic) IBInspectable UIColor *indicatorColor;
-@property(nonatomic) IBInspectable UIColor *rippleColor;
+@property(nonatomic)  UIColor *textColor;
+@property(nonatomic)  UIColor *backgroundColor;
+@property(nonatomic)  UIColor *indicatorColor;
+@property(nonatomic)  UIColor *rippleColor;
 
 @property(nonatomic) UIFont *textFont;
 @property(nonatomic) NSUInteger selectedIndex;

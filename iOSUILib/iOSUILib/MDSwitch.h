@@ -22,15 +22,15 @@
 
 #import <UIKit/UIKit.h>
 
-IB_DESIGNABLE
+
 @interface MDSwitch : UIControl
 
-@property(nonatomic, getter=isOn) IBInspectable BOOL on;
+@property(nonatomic, getter=isOn)  BOOL on;
 //@property(nonatomic, getter=isEnabled) IBInspectable BOOL enabled;
-@property(nonatomic) IBInspectable UIColor *thumbOn;
-@property(nonatomic) IBInspectable UIColor *trackOn;
-@property(nonatomic) IBInspectable UIColor *thumbOff;
-@property(nonatomic) IBInspectable UIColor *trackOff;
-@property(nonatomic) IBInspectable UIColor *thumbDisabled;
-@property(nonatomic) IBInspectable UIColor *trackDisabled;
+@property(nonatomic)  UIColor *thumbOn;
+@property(nonatomic)  UIColor *trackOn;
+@property(nonatomic)  UIColor *thumbOff;
+@property(nonatomic)  UIColor *trackOff;
+@property(nonatomic)  UIColor *thumbDisabled;
+@property(nonatomic)  UIColor *trackDisabled;
 @end

@@ -27,12 +27,12 @@
 
 enum MDButtonType { Raised, Flat, FloatingAction };
 
-IB_DESIGNABLE
+
 @interface MDButton : UIButton
-@property(nonatomic) IBInspectable UIColor *rippleColor;
-@property(nonatomic) IBInspectable int type;
+@property(nonatomic)  UIColor *rippleColor;
+@property(nonatomic)  int type;
 @property(nonatomic) enum MDButtonType mdButtonType;
-@property(nonatomic, getter=isEnabled) IBInspectable BOOL enabled;
+@property(nonatomic, getter=isEnabled)  BOOL enabled;
 
 - (id)initWithFrame:(CGRect)frame
                type:(enum MDButtonType)buttonType

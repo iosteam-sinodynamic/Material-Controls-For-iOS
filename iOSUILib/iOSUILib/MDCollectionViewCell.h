@@ -22,7 +22,7 @@
 
 #import <UIKit/UIKit.h>
 
-IB_DESIGNABLE
+
 @interface MDCollectionViewCell : UICollectionViewCell
-@property(nonatomic) IBInspectable UIColor *rippleColor;
+@property(nonatomic)  UIColor *rippleColor;
 @end

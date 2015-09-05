@@ -97,8 +97,7 @@
   self.frame = _superLayer.bounds;
 
   if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_7_1) {
-    [_superLayer insertSublayer:self
-                        atIndex:(int)[_superLayer.sublayers count]];
+    [_superLayer insertSublayer:self atIndex:0];
   } else {
     [_superLayer addSublayer:self];
   }

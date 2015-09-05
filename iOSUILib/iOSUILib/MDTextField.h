@@ -62,31 +62,31 @@ enum ViewState { NORMAL, HIGHLIGHT, ERROR, DISABLED };
 
 @end
 
-IB_DESIGNABLE
+
 @interface MDTextField : UIControl
 
-@property(nonatomic) IBInspectable NSString *hint;
-@property(nonatomic) IBInspectable NSString *label;
-@property(nonatomic) IBInspectable BOOL floatingLabel;
-@property(nonatomic) IBInspectable BOOL highlightLabel;
-@property(nonatomic) IBInspectable NSString *errorMessage;
-@property(nonatomic) IBInspectable int maxCharacterCount;
+@property(nonatomic)  NSString *hint;
+@property(nonatomic)  NSString *label;
+@property(nonatomic)  BOOL floatingLabel;
+@property(nonatomic)  BOOL highlightLabel;
+@property(nonatomic)  NSString *errorMessage;
+@property(nonatomic)  int maxCharacterCount;
 
-@property(nonatomic) IBInspectable UIColor *normalColor;
-@property(nonatomic) IBInspectable UIColor *highlightColor;
-@property(nonatomic) IBInspectable UIColor *errorColor;
-@property(nonatomic) IBInspectable UIColor *disabledColor;
-@property(nonatomic) IBInspectable UIColor *textColor;
-@property(nonatomic) IBInspectable UIColor *hintColor;
+@property(nonatomic)  UIColor *normalColor;
+@property(nonatomic)  UIColor *highlightColor;
+@property(nonatomic)  UIColor *errorColor;
+@property(nonatomic)  UIColor *disabledColor;
+@property(nonatomic)  UIColor *textColor;
+@property(nonatomic)  UIColor *hintColor;
 
-@property(nonatomic, getter=isEnabled) IBInspectable BOOL enabled;
-@property(nonatomic) IBInspectable BOOL autoComplete;
-@property(nonatomic) IBInspectable BOOL singleLine;
-@property(nonatomic) IBInspectable BOOL fullWidth;
-@property(nonatomic) IBInspectable int minVisibleLines;
-@property(nonatomic) IBInspectable int maxVisibleLines;
-@property(nonatomic) IBInspectable NSString *text;
-@property(nonatomic) IBInspectable BOOL secureTextEntry;
+@property(nonatomic, getter=isEnabled)  BOOL enabled;
+@property(nonatomic)  BOOL autoComplete;
+@property(nonatomic)  BOOL singleLine;
+@property(nonatomic)  BOOL fullWidth;
+@property(nonatomic)  int minVisibleLines;
+@property(nonatomic)  int maxVisibleLines;
+@property(nonatomic)  NSString *text;
+@property(nonatomic)  BOOL secureTextEntry;
 
 @property(nonatomic) UIReturnKeyType returnKeyType;
 @property(nonatomic) UIKeyboardType keyboardType;

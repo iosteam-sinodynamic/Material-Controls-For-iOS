@@ -37,7 +37,7 @@
 - (void)actionTouched:(MDSnackbar *)snackbar;
 @end
 
-IB_DESIGNABLE
+
 @interface MDSnackbar : UIControl
 
 @property(nonatomic) NSString *text;

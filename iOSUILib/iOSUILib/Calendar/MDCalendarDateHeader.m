@@ -229,18 +229,17 @@
   _labelDayName.text = [_dateFormatter stringFromDate:date];
 
   _dateFormatter.dateFormat = @"MM";
-  NSString *monthName = @"";
+  NSString *monthName = [[_dateFormatter standaloneMonthSymbols]
+      objectAtIndex:([[_dateFormatter stringFromDate:date] intValue] - 1)];
   if (_monthFormat == MDCalendarMonthSymbolsFormatShort ||
       _monthFormat == MDCalendarMonthSymbolsFormatShortUppercase) {
-    monthName = [[_dateFormatter shortMonthSymbols]
-        objectAtIndex:([[_dateFormatter stringFromDate:date] intValue] - 1)];
+    monthName = [monthName substringToIndex:3];
     if (_monthFormat == MDCalendarMonthSymbolsFormatShortUppercase) {
       monthName = [monthName uppercaseString];
     }
   } else {
     if (_monthFormat == MDCalendarMonthSymbolsFormatFull) {
-      monthName = [[_dateFormatter monthSymbols]
-          objectAtIndex:([[_dateFormatter stringFromDate:date] intValue] - 1)];
+      monthName = [monthName uppercaseString];
     }
   }
   _labelMonthName.text = monthName;

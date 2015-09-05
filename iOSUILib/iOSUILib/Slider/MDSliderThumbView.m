@@ -123,7 +123,7 @@
   _node.layer.cornerRadius = kMDThumbForcusedRadius;
   [_node.layer addAnimation:animation forKey:@"cornerRadius"];
 
-  if (_enableBubble) {
+  if (_slider.step > 0 && _slider.enabledValueLabel) {
     [self showBubble];
     [self hideNode];
   }
@@ -148,7 +148,7 @@
   _node.layer.cornerRadius = kMDThumbRadius;
   [_node.layer addAnimation:animation forKey:@"cornerRadius"];
 
-  if (_enableBubble) {
+  if (_slider.step > 0 && _slider.enabledValueLabel) {
     [self hideBubble];
     [self showNode];
   }
@@ -251,8 +251,7 @@
   }
 }
 
-- (void)setEnableBubble:(BOOL)enabled {
-  _enableBubble = enabled;
+- (void)enableBubble:(BOOL)enabled {
   if (enabled) {
     if (!_bubble.superview) {
       [self addSubview:_bubble];

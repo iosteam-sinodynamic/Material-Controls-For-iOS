@@ -30,18 +30,18 @@ enum MDProgressType {
   //  Buffer,
   //  QueryIndeterminateAndDeterminate
 };
-IB_DESIGNABLE
+
 @interface MDProgress : UIView
 
-@property(nonatomic) IBInspectable UIColor *progressColor;
-@property(nonatomic) IBInspectable UIColor *trackColor;
+@property(nonatomic)  UIColor *progressColor;
+@property(nonatomic)  UIColor *trackColor;
 @property(nonatomic) enum MDProgressType progressType;
 @property(nonatomic) enum MDProgressStyle progressStyle;
 
-@property(nonatomic) IBInspectable int type;
-@property(nonatomic) IBInspectable int style;
-@property(nonatomic) IBInspectable float trackWidth;
+@property(nonatomic)  int type;
+@property(nonatomic)  int style;
+@property(nonatomic)  float trackWidth;
 
-@property(nonatomic) IBInspectable float progress;
-@property(nonatomic) IBInspectable BOOL enableTrackColor;
+@property(nonatomic)  float progress;
+@property(nonatomic)  BOOL enableTrackColor;
 @end

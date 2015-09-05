@@ -23,23 +23,23 @@
 #import <UIKit/UIKit.h>
 #define kMDAnimationDuration .2f
 
-IB_DESIGNABLE
+
 @interface MDSlider : UIControl
 
-@property(nonatomic) IBInspectable float value;
-@property(nonatomic) IBInspectable float maximumValue;
-@property(nonatomic) IBInspectable float minimumValue;
-@property(nonatomic) IBInspectable UIColor *thumbOnColor;
-@property(nonatomic) IBInspectable UIColor *trackOnColor;
-@property(nonatomic) IBInspectable UIColor *thumbOffColor;
-@property(nonatomic) IBInspectable UIColor *trackOffColor;
-@property(nonatomic) IBInspectable UIColor *disabledColor;
-@property(nonatomic) IBInspectable UIColor *tickMarksColor;
-@property(nonatomic) IBInspectable UIImage *leftImage;
-@property(nonatomic) IBInspectable UIImage *rightImage;
-@property(nonatomic, getter=isEnabled) IBInspectable BOOL enabled;
-@property(nonatomic) IBInspectable float step;
-@property(nonatomic) IBInspectable BOOL enabledValueLabel;
-@property(nonatomic) IBInspectable NSUInteger precision;
+@property(nonatomic)  float value;
+@property(nonatomic)  float maximumValue;
+@property(nonatomic)  float minimumValue;
+@property(nonatomic)  UIColor *thumbOnColor;
+@property(nonatomic)  UIColor *trackOnColor;
+@property(nonatomic)  UIColor *thumbOffColor;
+@property(nonatomic)  UIColor *trackOffColor;
+@property(nonatomic)  UIColor *disabledColor;
+@property(nonatomic)  UIColor *tickMarksColor;
+@property(nonatomic)  UIImage *leftImage;
+@property(nonatomic)  UIImage *rightImage;
+@property(nonatomic, getter=isEnabled)  BOOL enabled;
+@property(nonatomic)  float step;
+@property(nonatomic)  BOOL enabledValueLabel;
+@property(nonatomic)  NSUInteger precision;
 
 @end

@@ -29,7 +29,7 @@
 #import "UIFontHelper.h"
 
 #define kMDContentHorizontalPaddingIPad 24
-#define kMDContentHorizontalPaddingIPhone 12
+#define kMDContentHorizontalPaddingIPhone 5
 #define kMDTabBarHorizontalInset 8
 
 #define DISABLED_TEXT_ALPHA .6

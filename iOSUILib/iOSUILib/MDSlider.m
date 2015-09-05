@@ -73,7 +73,7 @@
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
-  if (self = [super initWithFrame:frame]) {
+  if (self = [super init]) {
     [self setupContent];
     [self layoutContent];
   }
@@ -432,14 +432,19 @@
 - (void)setStep:(float)step {
   _step = step;
   tickMarksView.step = step;
+  if (step > 0 && _enabledValueLabel) {
+    [thumbView enableBubble:YES];
+  } else {
+    [thumbView enableBubble:NO];
+  }
 }
 
 - (void)setEnabledValueLabel:(BOOL)enabledValueLabel {
   _enabledValueLabel = enabledValueLabel;
-  if (_enabledValueLabel) {
-    [thumbView setEnableBubble:YES];
+  if (_step > 0 && _enabledValueLabel) {
+    [thumbView enableBubble:YES];
   } else {
-    [thumbView setEnableBubble:NO];
+    [thumbView enableBubble:NO];
   }
 }
 
