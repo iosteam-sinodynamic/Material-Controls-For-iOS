@@ -21,11 +21,9 @@
 // THE SOFTWARE.
 
 #import "MDTableViewCell.h"
-#import "MDRippleLayer.h"
 
 @interface MDTableViewCell ()
 
-@property MDRippleLayer *mdLayer;
 
 @end
 

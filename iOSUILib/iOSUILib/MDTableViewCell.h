@@ -21,10 +21,12 @@
 // THE SOFTWARE.
 
 #import <UIKit/UIKit.h>
+#import "MDRippleLayer.h"
 
 
 @interface MDTableViewCell : UITableViewCell
 
 @property(nonatomic)  UIColor *rippleColor;
+@property MDRippleLayer *mdLayer;
 
 @end
