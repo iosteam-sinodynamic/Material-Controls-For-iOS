@@ -40,5 +40,6 @@
 
 - (instancetype)initWithDelegate:(id)delegate;
 - (void)setItems:(NSArray *)items;
+- (void)setSelectedIndex:(NSUInteger)selectedIndex;
 
 @end

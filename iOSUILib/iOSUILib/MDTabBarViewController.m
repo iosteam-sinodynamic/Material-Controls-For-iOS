@@ -144,6 +144,11 @@
   [_tabBar setItems:items];
 }
 
+- (void)setSelectedIndex:(NSUInteger)selectedIndex {
+    _tabBar.selectedIndex = selectedIndex;
+    [self tabBar:_tabBar didChangeSelectedIndex:selectedIndex];
+}
+
 #pragma PageViewControllerDataSource
 - (UIViewController *)pageViewController:
                           (UIPageViewController *)pageViewController
