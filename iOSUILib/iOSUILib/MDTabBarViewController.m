@@ -23,120 +23,123 @@
 #import "MDTabBarViewController.h"
 
 @interface MDTabBarViewController () <
-    MDTabBarDelegate, UIPageViewControllerDelegate,
-    UIPageViewControllerDataSource, UIScrollViewDelegate>
+MDTabBarDelegate, UIPageViewControllerDelegate,
+UIPageViewControllerDataSource, UIScrollViewDelegate>
 @end
 
-@implementation MDTabBarViewController
-- (instancetype)initWithDelegate:(id)delegate {
-  if (self = [super init]) {
-    self.delegate = delegate;
-    [self initContent];
-  }
+@implementation MDTabBarViewController {
+    
+}
 
-  return self;
+- (instancetype)initWithDelegate:(id)delegate {
+    if (self = [super init]) {
+        self.delegate = delegate;
+        [self initContent];
+    }
+    
+    return self;
 }
 
 - (void)initContent {
-  _tabBar = [[MDTabBar alloc] init];
-  _tabBar.delegate = self;
-
-  // create page controller
-  self.pageController = [[UIPageViewController alloc]
-      initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll
-        navigationOrientation:
-            UIPageViewControllerNavigationOrientationHorizontal
-                      options:nil];
-  self.pageController.delegate = self;
-  self.pageController.dataSource = self;
-
-  // delegate scrollview
-  for (UIView *v in self.pageController.view.subviews) {
-    if ([v isKindOfClass:[UIScrollView class]]) {
-      ((UIScrollView *)v).delegate = self;
-        self.scrollView=v;
+    _tabBar = [[MDTabBar alloc] init];
+    _tabBar.delegate = self;
+    
+    // create page controller
+    self.pageController = [[UIPageViewController alloc]
+                           initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll
+                           navigationOrientation:
+                           UIPageViewControllerNavigationOrientationHorizontal
+                           options:nil];
+    self.pageController.delegate = self;
+    self.pageController.dataSource = self;
+    
+    // delegate scrollview
+    for (UIView *v in self.pageController.view.subviews) {
+        if ([v isKindOfClass:[UIScrollView class]]) {
+            ((UIScrollView *)v).delegate = self;
+            self.scrollView=(UIScrollView *)v;
+        }
     }
-  }
-
-  // add page controller as child
-  [self addChildViewController:self.pageController];
-  [self.pageController didMoveToParentViewController:self];
-
-  self.viewControllers = [[NSMutableDictionary alloc] init];
+    
+    // add page controller as child
+    [self addChildViewController:self.pageController];
+    [self.pageController didMoveToParentViewController:self];
+    
+    self.viewControllers = [[NSMutableDictionary alloc] init];
 }
 
 - (void)addConstraints {
-  [_tabBar setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [self.pageController.view setTranslatesAutoresizingMaskIntoConstraints:NO];
-  [self.view setTranslatesAutoresizingMaskIntoConstraints:NO];
-
-  // create constraints
-  UIView *parentView = self.view;
-  UIView *self.pageControllerView = self.pageController.view;
-  //  self.pageControllerView.backgroundColor = [UIColor blueColor];
-
-  NSDictionary *viewsDictionary =
-      NSDictionaryOfVariableBindings(parentView, _tabBar, self.pageControllerView);
-
-  NSDictionary *metricsDictionary = @{ @"tabHeight" : @kMDTabBarHeight };
-
-  [self.view addConstraints:[NSLayoutConstraint
-                                constraintsWithVisualFormat:@"V:|-0-[_tabBar(=="
-                                @"tabHeight)]-0-[self.pageControllerView]-0-|"
-                                                    options:0
-                                                    metrics:metricsDictionary
-                                                      views:viewsDictionary]];
-  [self.view addConstraints:[NSLayoutConstraint
-                                constraintsWithVisualFormat:@"H:|[_tabBar]|"
-                                                    options:0
-                                                    metrics:metricsDictionary
-                                                      views:viewsDictionary]];
-  [self.view
-      addConstraints:[NSLayoutConstraint
-                         constraintsWithVisualFormat:@"H:|[self.pageControllerView]|"
-                                             options:0
-                                             metrics:metricsDictionary
-                                               views:viewsDictionary]];
+    [_tabBar setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.pageController.view setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [self.view setTranslatesAutoresizingMaskIntoConstraints:NO];
+    
+    // create constraints
+    UIView *parentView = self.view;
+    UIView *pageControllerView = self.pageController.view;
+    //  pageControllerView.backgroundColor = [UIColor blueColor];
+    
+    NSDictionary *viewsDictionary =
+    NSDictionaryOfVariableBindings(parentView, _tabBar, pageControllerView);
+    
+    NSDictionary *metricsDictionary = @{ @"tabHeight" : @kMDTabBarHeight };
+    
+    [self.view addConstraints:[NSLayoutConstraint
+                               constraintsWithVisualFormat:@"V:|-0-[_tabBar(=="
+                               @"tabHeight)]-0-[pageControllerView]-0-|"
+                               options:0
+                               metrics:metricsDictionary
+                               views:viewsDictionary]];
+    [self.view addConstraints:[NSLayoutConstraint
+                               constraintsWithVisualFormat:@"H:|[_tabBar]|"
+                               options:0
+                               metrics:metricsDictionary
+                               views:viewsDictionary]];
+    [self.view
+     addConstraints:[NSLayoutConstraint
+                     constraintsWithVisualFormat:@"H:|[pageControllerView]|"
+                     options:0
+                     metrics:metricsDictionary
+                     views:viewsDictionary]];
 }
 
 - (void)viewDidLoad {
-  [super viewDidLoad];
-
-  [self.view addSubview:self.pageController.view];
-  [self.view addSubview:_tabBar];
-  [self addConstraints];
-  // first view controller
-  id viewController =
-      [self.delegate tabBarViewController:self
-                    viewControllerAtIndex:_tabBar.selectedIndex];
-  [self.viewControllers
-      setObject:viewController
-         forKey:[NSNumber numberWithInteger:_tabBar.selectedIndex]];
-
-  __unsafe_unretained typeof(self) weakSelf = self;
-  [self.pageController
-      setself.viewControllers:@[ viewController ]
-               direction:UIPageViewControllerNavigationDirectionForward
-                animated:NO
-              completion:^(BOOL finished) {
-                if ([weakSelf->_delegate
-                        respondsToSelector:@selector(tabBarViewController:
-                                                           didMoveToIndex:)]) {
+    [super viewDidLoad];
+    
+    [self.view addSubview:self.pageController.view];
+    [self.view addSubview:_tabBar];
+    [self addConstraints];
+    // first view controller
+    id viewController =
+    [self.delegate tabBarViewController:self
+                  viewControllerAtIndex:_tabBar.selectedIndex];
+    [self.viewControllers
+     setObject:viewController
+     forKey:[NSNumber numberWithInteger:_tabBar.selectedIndex]];
+    
+    __unsafe_unretained typeof(self) weakSelf = self;
+    [self.pageController
+     setViewControllers:@[ viewController ]
+     direction:UIPageViewControllerNavigationDirectionForward
+     animated:NO
+     completion:^(BOOL finished) {
+         if ([weakSelf->_delegate
+              respondsToSelector:@selector(tabBarViewController:
+                                           didMoveToIndex:)]) {
                   [weakSelf->_delegate
-                      tabBarViewController:weakSelf
-                            didMoveToIndex:weakSelf->_tabBar.selectedIndex];
-                }
-              }];
+                   tabBarViewController:weakSelf
+                   didMoveToIndex:weakSelf->_tabBar.selectedIndex];
+              }
+     }];
 }
 
 - (void)didReceiveMemoryWarning {
-  [super didReceiveMemoryWarning];
-  // Dispose of any resources that can be recreated.
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
 }
 
 #pragma Public functions
 - (void)setItems:(NSArray *)items {
-  [_tabBar setItems:items];
+    [_tabBar setItems:items];
 }
 
 - (void)setSelectedIndex:(NSUInteger)selectedIndex {
@@ -146,168 +149,168 @@
 
 #pragma PageViewControllerDataSource
 - (UIViewController *)pageViewController:
-                          (UIPageViewController *)pageViewController
+(UIPageViewController *)pageViewController
        viewControllerAfterViewController:(UIViewController *)viewController {
-
-  NSInteger index = _tabBar.selectedIndex;
-
-  if (index++ < _tabBar.numberOfItems - 1) {
-
-    UIViewController *nextViewController =
+    
+    NSInteger index = _tabBar.selectedIndex;
+    
+    if (index++ < _tabBar.numberOfItems - 1) {
+        
+        UIViewController *nextViewController =
         [self.viewControllers objectForKey:[NSNumber numberWithInteger:index]];
-
-    if (!nextViewController) {
-      nextViewController =
-          [self.delegate tabBarViewController:self viewControllerAtIndex:index];
-      [self.viewControllers setObject:nextViewController
-                          forKey:[NSNumber numberWithInteger:index]];
+        
+        if (!nextViewController) {
+            nextViewController =
+            [self.delegate tabBarViewController:self viewControllerAtIndex:index];
+            [self.viewControllers setObject:nextViewController
+                                     forKey:[NSNumber numberWithInteger:index]];
+        }
+        
+        return nextViewController;
     }
-
-    return nextViewController;
-  }
-
-  return nil;
+    
+    return nil;
 }
 
 - (UIViewController *)pageViewController:
-                          (UIPageViewController *)pageViewController
+(UIPageViewController *)pageViewController
       viewControllerBeforeViewController:(UIViewController *)viewController {
-
-  NSInteger index = _tabBar.selectedIndex;
-
-  if (index-- > 0) {
-    UIViewController *nextViewController =
+    
+    NSInteger index = _tabBar.selectedIndex;
+    
+    if (index-- > 0) {
+        UIViewController *nextViewController =
         [self.viewControllers objectForKey:[NSNumber numberWithInteger:index]];
-
-    if (!nextViewController) {
-      nextViewController =
-          [self.delegate tabBarViewController:self viewControllerAtIndex:index];
-      [self.viewControllers setObject:nextViewController
-                          forKey:[NSNumber numberWithInteger:index]];
+        
+        if (!nextViewController) {
+            nextViewController =
+            [self.delegate tabBarViewController:self viewControllerAtIndex:index];
+            [self.viewControllers setObject:nextViewController
+                                     forKey:[NSNumber numberWithInteger:index]];
+        }
+        
+        return nextViewController;
     }
-
-    return nextViewController;
-  }
-
-  return nil;
+    
+    return nil;
 }
 
 #pragma mark - PageViewController Delegate
 - (void)pageViewController:(UIPageViewController *)pageViewController
         didFinishAnimating:(BOOL)finished
-   previousself.viewControllers:(NSArray *)previousself.viewControllers
+   previousViewControllers:(NSArray *)previousViewControllers
        transitionCompleted:(BOOL)completed {
-  if (!completed)
-    return;
-
-  id currentView = [pageViewController.self.viewControllers objectAtIndex:0];
-
-  NSNumber *key = (NSNumber *)[self.viewControllers allKeysForObject:currentView][0];
-  _tabBar.selectedIndex = [key integerValue];
-  self.lastIndex = _tabBar.selectedIndex;
-
-  // call delegate
-  if ([self.delegate
-          respondsToSelector:@selector(tabBarViewController:didMoveToIndex:)]) {
-    [self.delegate tabBarViewController:self
-                         didMoveToIndex:_tabBar.selectedIndex];
-  }
+    if (!completed)
+        return;
+    
+    id currentView = [pageViewController.viewControllers objectAtIndex:0];
+    
+    NSNumber *key = (NSNumber *)[self.viewControllers allKeysForObject:currentView][0];
+    _tabBar.selectedIndex = [key integerValue];
+    self.lastIndex = _tabBar.selectedIndex;
+    
+    // call delegate
+    if ([self.delegate
+         respondsToSelector:@selector(tabBarViewController:didMoveToIndex:)]) {
+        [self.delegate tabBarViewController:self
+                             didMoveToIndex:_tabBar.selectedIndex];
+    }
 }
 
 #pragma mark - MDTabBar Delegate
 - (void)tabBar:(MDTabBar *)tabBar
-    didChangeSelectedIndex:(NSUInteger)selectedIndex {
-  UIViewController *viewController =
-      [self.viewControllers objectForKey:[NSNumber numberWithInteger:selectedIndex]];
-
-  if (!viewController) {
-    viewController = [self.delegate tabBarViewController:self
-                                   viewControllerAtIndex:selectedIndex];
-    [self.viewControllers setObject:viewController
-                        forKey:[NSNumber numberWithInteger:selectedIndex]];
-  }
-
-  UIPageViewControllerNavigationDirection animateDirection =
-      selectedIndex > self.lastIndex
-          ? UIPageViewControllerNavigationDirectionForward
-          : UIPageViewControllerNavigationDirectionReverse;
-
-  __unsafe_unretained typeof(self) weakSelf = self;
-  self.disableDragging = YES;
-  self.pageController.view.userInteractionEnabled = NO;
-  [self.pageController
-      setself.viewControllers:@[ viewController ]
-               direction:animateDirection
-                animated:NO
-              completion:^(BOOL finished) {
-                weakSelf->self.disableDragging = NO;
-                weakSelf->self.pageController.view.userInteractionEnabled = YES;
-                weakSelf->self.lastIndex = selectedIndex;
-
-                if ([weakSelf->_delegate
-                        respondsToSelector:@selector(tabBarViewController:
-                                                           didMoveToIndex:)]) {
+didChangeSelectedIndex:(NSUInteger)selectedIndex {
+    UIViewController *viewController =
+    [self.viewControllers objectForKey:[NSNumber numberWithInteger:selectedIndex]];
+    
+    if (!viewController) {
+        viewController = [self.delegate tabBarViewController:self
+                                       viewControllerAtIndex:selectedIndex];
+        [self.viewControllers setObject:viewController
+                                 forKey:[NSNumber numberWithInteger:selectedIndex]];
+    }
+    
+    UIPageViewControllerNavigationDirection animateDirection =
+    selectedIndex > self.lastIndex
+    ? UIPageViewControllerNavigationDirectionForward
+    : UIPageViewControllerNavigationDirectionReverse;
+    
+    __unsafe_unretained typeof(self) weakSelf = self;
+    self.disableDragging = YES;
+    self.pageController.view.userInteractionEnabled = NO;
+    [self.pageController
+     setViewControllers:@[ viewController ]
+     direction:animateDirection
+     animated:NO
+     completion:^(BOOL finished) {
+         weakSelf.disableDragging = NO;
+         weakSelf.pageController.view.userInteractionEnabled = YES;
+         weakSelf.lastIndex = selectedIndex;
+         
+         if ([weakSelf->_delegate
+              respondsToSelector:@selector(tabBarViewController:
+                                           didMoveToIndex:)]) {
                   [weakSelf->_delegate tabBarViewController:weakSelf
                                              didMoveToIndex:selectedIndex];
-                }
-              }];
+              }
+     }];
 }
 
 #pragma mark - ScrollView Delegate
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-
-  CGPoint offset = scrollView.contentOffset;
-
-  CGFloat scrollViewWidth = scrollView.frame.size.width;
-
-  int selectedIndex = (int)_tabBar.selectedIndex;
-
-  if (!self.disableDragging) {
-    float xDriff = offset.x - scrollViewWidth;
-    UIView *selectedTab = (UIView *)[_tabBar tabs][selectedIndex];
-
-    if (offset.x < scrollViewWidth) {
-      if (_tabBar.selectedIndex == 0)
-        return;
-
-      UIView *leftTab = (UIView *)[_tabBar tabs][selectedIndex - 1];
-
-      float widthDiff = selectedTab.frame.size.width - leftTab.frame.size.width;
-
-      float newOriginX = selectedTab.frame.origin.x +
-                         xDriff / scrollViewWidth * leftTab.frame.size.width;
-
-      float newWidth =
-          selectedTab.frame.size.width + xDriff / scrollViewWidth * widthDiff;
-
-      CGRect frame =
-          CGRectMake(newOriginX, kMDTabBarHeight - kMDIndicatorHeight, newWidth,
-                     kMDIndicatorHeight);
-      [_tabBar moveIndicatorToFrame:frame withAnimated:NO];
-
-    } else {
-      if (selectedIndex + 1 >= _tabBar.numberOfItems)
-        return;
-
-      UIView *rightTab = (UIView *)[_tabBar tabs][selectedIndex + 1];
-
-      float widthDiff =
-          rightTab.frame.size.width - selectedTab.frame.size.width;
-
-      float newOriginX =
-          selectedTab.frame.origin.x +
-          xDriff / scrollViewWidth * selectedTab.frame.size.width;
-
-      float newWidth =
-          selectedTab.frame.size.width + xDriff / scrollViewWidth * widthDiff;
-
-      CGRect frame =
-          CGRectMake(newOriginX, kMDTabBarHeight - kMDIndicatorHeight, newWidth,
-                     kMDIndicatorHeight);
-      [_tabBar moveIndicatorToFrame:frame withAnimated:NO];
+    
+    CGPoint offset = scrollView.contentOffset;
+    
+    CGFloat scrollViewWidth = scrollView.frame.size.width;
+    
+    int selectedIndex = (int)_tabBar.selectedIndex;
+    
+    if (!self.disableDragging) {
+        float xDriff = offset.x - scrollViewWidth;
+        UIView *selectedTab = (UIView *)[_tabBar tabs][selectedIndex];
+        
+        if (offset.x < scrollViewWidth) {
+            if (_tabBar.selectedIndex == 0)
+                return;
+            
+            UIView *leftTab = (UIView *)[_tabBar tabs][selectedIndex - 1];
+            
+            float widthDiff = selectedTab.frame.size.width - leftTab.frame.size.width;
+            
+            float newOriginX = selectedTab.frame.origin.x +
+            xDriff / scrollViewWidth * leftTab.frame.size.width;
+            
+            float newWidth =
+            selectedTab.frame.size.width + xDriff / scrollViewWidth * widthDiff;
+            
+            CGRect frame =
+            CGRectMake(newOriginX, kMDTabBarHeight - kMDIndicatorHeight, newWidth,
+                       kMDIndicatorHeight);
+            [_tabBar moveIndicatorToFrame:frame withAnimated:NO];
+            
+        } else {
+            if (selectedIndex + 1 >= _tabBar.numberOfItems)
+                return;
+            
+            UIView *rightTab = (UIView *)[_tabBar tabs][selectedIndex + 1];
+            
+            float widthDiff =
+            rightTab.frame.size.width - selectedTab.frame.size.width;
+            
+            float newOriginX =
+            selectedTab.frame.origin.x +
+            xDriff / scrollViewWidth * selectedTab.frame.size.width;
+            
+            float newWidth =
+            selectedTab.frame.size.width + xDriff / scrollViewWidth * widthDiff;
+            
+            CGRect frame =
+            CGRectMake(newOriginX, kMDTabBarHeight - kMDIndicatorHeight, newWidth,
+                       kMDIndicatorHeight);
+            [_tabBar moveIndicatorToFrame:frame withAnimated:NO];
+        }
     }
-  }
 }
 
 @end
