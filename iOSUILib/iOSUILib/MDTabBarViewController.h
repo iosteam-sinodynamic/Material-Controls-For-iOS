@@ -35,6 +35,11 @@
 
 @interface MDTabBarViewController : UIViewController
 
+@property(nonatomic, strong) UIPageViewController *pageController;
+@property(nonatomic, strong) NSMutableDictionary *viewControllers;
+@property(nonatomic, strong) UIScrollView *scrollView;
+@property(nonatomic) NSUInteger lastIndex;
+@property(nonatomic) BOOL disableDragging;
 @property(nonatomic, readonly) MDTabBar *tabBar;
 @property(nonatomic, weak) id<MDTabBarViewControllerDelegate> delegate;
 
