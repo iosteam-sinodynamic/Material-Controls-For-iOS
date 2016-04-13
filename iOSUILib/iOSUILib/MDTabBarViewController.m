@@ -235,25 +235,27 @@ didChangeSelectedIndex:(NSUInteger)selectedIndex {
     ? UIPageViewControllerNavigationDirectionForward
     : UIPageViewControllerNavigationDirectionReverse;
     
-    __unsafe_unretained typeof(self) weakSelf = self;
-    self.disableDragging = YES;
-    self.pageController.view.userInteractionEnabled = NO;
-    [self.pageController
-     setViewControllers:@[ viewController ]
-     direction:animateDirection
-     animated:NO
-     completion:^(BOOL finished) {
-         weakSelf.disableDragging = NO;
-         weakSelf.pageController.view.userInteractionEnabled = YES;
-         weakSelf.lastIndex = selectedIndex;
-         
-         if ([weakSelf->_delegate
-              respondsToSelector:@selector(tabBarViewController:
-                                           didMoveToIndex:)]) {
-                  [weakSelf->_delegate tabBarViewController:weakSelf
-                                             didMoveToIndex:selectedIndex];
-              }
-     }];
+    if (![self.scrollView isDragging]) {
+        __unsafe_unretained typeof(self) weakSelf = self;
+        self.disableDragging = YES;
+        self.pageController.view.userInteractionEnabled = NO;
+        [self.pageController
+         setViewControllers:@[ viewController ]
+         direction:animateDirection
+         animated:NO
+         completion:^(BOOL finished) {
+             weakSelf.disableDragging = NO;
+             weakSelf.pageController.view.userInteractionEnabled = YES;
+             weakSelf.lastIndex = selectedIndex;
+             
+             if ([weakSelf->_delegate
+                  respondsToSelector:@selector(tabBarViewController:
+                                               didMoveToIndex:)]) {
+                      [weakSelf->_delegate tabBarViewController:weakSelf
+                                                 didMoveToIndex:selectedIndex];
+                  }
+         }];
+    }
 }
 
 #pragma mark - ScrollView Delegate
@@ -311,6 +313,14 @@ didChangeSelectedIndex:(NSUInteger)selectedIndex {
             [_tabBar moveIndicatorToFrame:frame withAnimated:NO];
         }
     }
+}
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+    [self.tabBar setUserInteractionEnabled:NO];
+}
+
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+    [self.tabBar setUserInteractionEnabled:YES];
 }
 
 @end
