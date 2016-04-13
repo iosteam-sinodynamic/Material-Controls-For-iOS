@@ -33,7 +33,8 @@
 #define kMDElevationOffset 6
 #define kMDClearEffectDuration 0.3f;
 
-@interface MDRippleLayer () <MDTouchGestureRecognizerDelegate>
+@interface MDRippleLayer () <MDTouchGestureRecognizerDelegate,
+                             UIGestureRecognizerDelegate>
 
 @property CALayer *superLayer;
 @property CAShapeLayer *rippleLayer;
@@ -65,6 +66,7 @@
     MDTouchGestureRecognizer *recognizer =
         [[MDTouchGestureRecognizer alloc] init];
     recognizer.touchDelegate = self;
+    recognizer.delegate = self;
     [superView addGestureRecognizer:recognizer];
     [self initContents];
   }
@@ -124,7 +126,9 @@
 }
 
 - (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag {
-  if (flag) {
+  if (anim == [self animationForKey:@"opacityAnim"]) {
+    self.opacity = 0;
+  } else if (flag) {
     if (_userIsHolding) {
       _effectIsRunning = false;
       if (self.delegate) {
@@ -135,6 +139,8 @@
     }
   }
 }
+
+#pragma mark MDTouchGestureRecognizerDelegate methods
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
   CGPoint point = [touches.allObjects[0] locationInView:superView];
@@ -152,6 +158,14 @@
   [self stopEffects];
 }
 
+#pragma mark UIGestureRecognizerDelegate methods
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
+    shouldRecognizeSimultaneouslyWithGestureRecognizer:
+        (UIGestureRecognizer *)otherGestureRecognizer {
+  return YES;
+}
+
 #pragma mark Setters
 
 - (void)setEffectColor:(UIColor *)color {
@@ -163,8 +177,8 @@
 }
 
 - (void)setEffectColor:(UIColor *)color
-       withRippleAlpha:(float)rippleAlpha
-       backgroundAlpha:(float)backgroundAlpha {
+       withRippleAlpha:(CGFloat)rippleAlpha
+       backgroundAlpha:(CGFloat)backgroundAlpha {
   _effectColor = color;
   _rippleLayer.fillColor =
       [[color colorWithAlphaComponent:rippleAlpha] CGColor];
@@ -172,7 +186,7 @@
       [[color colorWithAlphaComponent:backgroundAlpha] CGColor];
 }
 
-- (void)setRippleScaleRatio:(float)rippleScaleRatio {
+- (void)setRippleScaleRatio:(CGFloat)rippleScaleRatio {
   _rippleScaleRatio = rippleScaleRatio;
   [self calculateRippleSize];
 }
@@ -228,6 +242,26 @@
   }
 }
 
+- (void)stopEffectsImmediately {
+  _userIsHolding = false;
+  _effectIsRunning = false;
+  if (_enableRipple) {
+    [_rippleLayer removeAllAnimations];
+    [_backgroundLayer removeAllAnimations];
+    _rippleLayer.opacity = 0;
+    _backgroundLayer.opacity = 0;
+  }
+  if (_enableElevation) {
+    [_superLayer removeAnimationForKey:kMDShadowAnimationKey];
+    _superLayer.shadowRadius = _restingElevation / 4;
+#if !TARGET_INTERFACE_BUILDER
+    _superLayer.shadowOffset = CGSizeMake(0, _restingElevation / 4 + 0.5);
+#else
+    _superLayer.shadowOffset = CGSizeMake(0, -(_restingElevation / 4 + 0.5));
+#endif
+  }
+}
+
 #pragma mark Private Methods
 - (CGPoint)nearestInnerPoint:(CGPoint)point {
   CGFloat centerX = CGRectGetMidX(self.bounds);
@@ -238,9 +272,9 @@
   if (dist <= _backgroundLayer.bounds.size.width / 2) {
     return point;
   } else {
-    float d = _backgroundLayer.bounds.size.width / (2 * dist);
-    float x = centerX + d * (point.x - centerX);
-    float y = centerY + d * (point.y - centerY);
+    CGFloat d = _backgroundLayer.bounds.size.width / (2 * dist);
+    CGFloat x = centerX + d * (point.x - centerX);
+    CGFloat y = centerY + d * (point.y - centerY);
     return CGPointMake(x, y);
   }
 }
@@ -249,13 +283,17 @@
   if (enable) {
     CGFloat elevation =
         resting ? _restingElevation : (_restingElevation + kMDElevationOffset);
-
     _superLayer.shadowOpacity = 0.5;
     _superLayer.shadowRadius = elevation / 4;
     _superLayer.shadowColor = [[UIColor blackColor] CGColor];
+#if !TARGET_INTERFACE_BUILDER
     _superLayer.shadowOffset = CGSizeMake(0, _restingElevation / 4 + 0.5);
+#else
+    _superLayer.shadowOffset = CGSizeMake(0, -(_restingElevation / 4 + 0.5));
+#endif
   } else {
     _superLayer.shadowRadius = 0;
+    _superLayer.shadowColor = [[UIColor clearColor] CGColor];
     _superLayer.shadowOffset = CGSizeMake(0, 0);
   }
 }
@@ -265,6 +303,10 @@
   _rippleLayer.speed = 1;
 
   if (_enableRipple) {
+    [_rippleLayer removeAllAnimations];
+    [_backgroundLayer removeAllAnimations];
+    [self removeAllAnimations];
+
     CABasicAnimation *opacityAnim =
         [CABasicAnimation animationWithKeyPath:@"opacity"];
     opacityAnim.fromValue = @(1.0f);
@@ -274,11 +316,8 @@
         [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
     opacityAnim.removedOnCompletion = false;
     opacityAnim.fillMode = kCAFillModeForwards;
+    opacityAnim.delegate = self;
 
-    [_rippleLayer removeAllAnimations];
-    [_backgroundLayer removeAllAnimations];
-
-    [self removeAllAnimations];
     [self addAnimation:opacityAnim forKey:@"opacityAnim"];
   }
 
@@ -310,11 +349,12 @@
 }
 
 - (void)startRippleEffect:(CGPoint)touchLocation {
-  float time = (_rippleLayer.bounds.size.width) / _effectSpeed;
+  [self removeAllAnimations];
+  self.opacity = 1;
+  CGFloat time = (_rippleLayer.bounds.size.width) / _effectSpeed;
   [_rippleLayer removeAllAnimations];
   [_backgroundLayer removeAllAnimations];
-  [self removeAllAnimations];
-  [_superLayer removeAllAnimations];
+  [_superLayer removeAnimationForKey:kMDShadowAnimationKey];
 
   CABasicAnimation *scaleAnim =
       [CABasicAnimation animationWithKeyPath:@"transform.scale"];

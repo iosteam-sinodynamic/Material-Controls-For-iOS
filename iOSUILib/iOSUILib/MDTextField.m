@@ -20,11 +20,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import "MDTextField.h"
+#import "AutoResizeTextView.h"
 #import "AutoResizeTextView.h"
 #import "MDConstants.h"
 #import "MDSuggestPopupView.h"
-#import "AutoResizeTextView.h"
+#import "MDTextField.h"
 #import "UIColorHelper.h"
 #import "UIFontHelper.h"
 
@@ -49,6 +49,9 @@
 @interface MDTextField ()
 @property(nonatomic) AutoResizeTextView *textView;
 @property(nonatomic) CustomTextField *textField;
+
+@property(nonatomic) MDTextFieldViewState viewState;
+@property(nonatomic) CALayer *highlightLayer;
 @end
 
 @implementation CustomTextField
@@ -73,15 +76,6 @@
   }
   return self;
 }
-
-//- (void)setTintColor:(UIColor *)tintColor {
-//  [super setTintColor:tintColor];
-//
-//  if ([self isFirstResponder]) {
-//    [self resignFirstResponder];
-//    [self becomeFirstResponder];
-//  }
-//}
 
 - (CGRect)caretRectForPosition:(UITextPosition *)position {
   CGRect caretRect = [super caretRectForPosition:position];
@@ -122,28 +116,161 @@
 #pragma mark DividerView
 @interface DividerView : UIView
 @property(nonatomic) BOOL enabled;
-@property(nonatomic) UIColor *dividerColor;
-@property(nonatomic) int dividerHeight;
+@property(nonatomic) UIColor *errorColor;
+@property(nonatomic) UIColor *highlightColor;
+@property(nonatomic) UIColor *normalColor;
+@property(assign, nonatomic) NSUInteger normalHeight;
+@property(assign, nonatomic) NSUInteger highlightHeight;
+@property(assign, nonatomic) MDTextFieldViewState state;
+@property(assign, nonatomic) BOOL useAnimation;
 @end
 
-@implementation DividerView
-
-- (void)setEnabled:(BOOL)enable {
-  _enabled = enable;
-  [self updateDividerLine];
+@implementation DividerView {
+  CAShapeLayer *backgroundLayer;
+  CAShapeLayer *highlightLayer;
 }
 
-- (void)setDividerColor:(UIColor *)dividerColor {
-  _dividerColor = dividerColor;
-  if ([[[self layer] sublayers] objectAtIndex:0]) {
-    ((CAShapeLayer *)[[[self layer] sublayers] objectAtIndex:0]).fillColor =
-        _dividerColor.CGColor;
+- (instancetype)initWithFrame:(CGRect)frame {
+  if (self = [super initWithFrame:frame]) {
+    backgroundLayer = [[CAShapeLayer alloc] init];
+    highlightLayer = [[CAShapeLayer alloc] init];
+    [self.layer addSublayer:backgroundLayer];
+  }
+
+  return self;
+}
+
+- (void)setEnabled:(BOOL)enable {
+  if (_enabled != enable) {
+    _enabled = enable;
+    [self updateDividerLine];
   }
 }
 
-- (void)setDividerHeight:(int)dividerHeight {
-  _dividerHeight = dividerHeight;
-  [self updateDividerLine];
+- (void)setNormalColor:(UIColor *)normalColor {
+  if (![_normalColor isEqual:normalColor]) {
+    _normalColor = normalColor;
+    backgroundLayer.strokeColor = _normalColor.CGColor;
+  }
+}
+
+- (void)setHighlightColor:(UIColor *)highlightColor {
+  if (![_highlightColor isEqual:highlightColor]) {
+    _highlightColor = highlightColor;
+    if (_state != MDTextFieldViewStateError)
+      highlightLayer.strokeColor = _highlightColor.CGColor;
+  }
+}
+
+- (void)setErrorColor:(UIColor *)errorColor {
+  if (![_errorColor isEqual:errorColor]) {
+    _errorColor = errorColor;
+    if (_state == MDTextFieldViewStateError)
+      highlightLayer.strokeColor = _highlightColor.CGColor;
+  }
+}
+
+- (void)setUseAnimation:(BOOL)useAnimation {
+  if (_useAnimation != useAnimation) {
+    _useAnimation = useAnimation;
+  }
+}
+
+- (void)setNormalHeight:(NSUInteger)normalHeight {
+  if (_normalHeight != normalHeight) {
+    _normalHeight = normalHeight;
+    backgroundLayer.lineWidth = _normalHeight;
+  }
+}
+
+- (void)setHighlightHeight:(NSUInteger)highlightHeight {
+  if (_highlightHeight != highlightHeight) {
+    _highlightHeight = highlightHeight;
+    highlightLayer.lineWidth = _highlightHeight;
+  }
+}
+
+- (void)setState:(MDTextFieldViewState)aState {
+  if (_state != aState) {
+
+    switch (aState) {
+    case MDTextFieldViewStateNormal:
+    case MDTextFieldViewStateDisabled:
+      if (_state == MDTextFieldViewStateHighlighted ||
+          _state == MDTextFieldViewStateError) {
+        if (_useAnimation) {
+          [CATransaction begin];
+          CABasicAnimation *hlAnimation =
+              [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
+          hlAnimation.duration = .1f;
+          hlAnimation.fromValue = @(1.0f);
+          hlAnimation.toValue = @(0.0f);
+          hlAnimation.timingFunction = [CAMediaTimingFunction
+              functionWithName:kCAMediaTimingFunctionEaseOut];
+          hlAnimation.removedOnCompletion = false;
+          hlAnimation.fillMode = kCAFillModeForwards;
+
+          [CATransaction setCompletionBlock:^{
+            [highlightLayer removeFromSuperlayer];
+          }];
+
+          [highlightLayer addAnimation:hlAnimation forKey:@"strokeEnd"];
+          [CATransaction commit];
+        } else {
+          [highlightLayer removeFromSuperlayer];
+        }
+      }
+      break;
+    case MDTextFieldViewStateHighlighted:
+    case MDTextFieldViewStateError:
+      if (_state == MDTextFieldViewStateNormal) {
+        [self.layer addSublayer:highlightLayer];
+        if (_useAnimation) {
+          [CATransaction begin];
+          CABasicAnimation *hlAnimation =
+              [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
+          hlAnimation.duration = .1f;
+          hlAnimation.fromValue = @(0.0f);
+          hlAnimation.toValue = @(1.0f);
+          hlAnimation.timingFunction = [CAMediaTimingFunction
+              functionWithName:kCAMediaTimingFunctionEaseOut];
+          hlAnimation.removedOnCompletion = false;
+          hlAnimation.fillMode = kCAFillModeForwards;
+
+          [CATransaction setCompletionBlock:^{
+
+          }];
+
+          [highlightLayer addAnimation:hlAnimation forKey:@"strokeEnd"];
+          [CATransaction commit];
+        }
+      }
+      break;
+
+    default:
+      break;
+    }
+
+    _state = aState;
+
+    switch (_state) {
+    case MDTextFieldViewStateNormal:
+
+      break;
+    case MDTextFieldViewStateHighlighted:
+      highlightLayer.strokeColor = _highlightColor.CGColor;
+      break;
+    case MDTextFieldViewStateError:
+      highlightLayer.strokeColor = _errorColor.CGColor;
+      break;
+    case MDTextFieldViewStateDisabled:
+
+      break;
+
+    default:
+      break;
+    }
+  }
 }
 
 - (void)layoutSubviews {
@@ -152,40 +279,35 @@
 }
 
 - (void)updateDividerLine {
-  if (_dividerHeight > 0) {
-    if (_enabled) {
-      [self drawLineDivider];
-    } else {
-      [self drawDashedLineDivider];
-    }
+  if (_enabled) {
+    [self drawLineDivider];
+  } else {
+    [self drawDashedLineDivider];
   }
 }
 
 - (void)drawLineDivider {
-  if ([[[self layer] sublayers] objectAtIndex:0]) {
-    self.layer.sublayers = nil;
-  }
-  CAShapeLayer *line = [CAShapeLayer layer];
   UIBezierPath *linePath = [UIBezierPath bezierPath];
   [linePath moveToPoint:CGPointMake(0, 0)];
   [linePath addLineToPoint:CGPointMake(self.bounds.size.width, 0)];
-  [line setPath:linePath.CGPath];
-  [line setLineWidth:_dividerHeight];
-  [line setFillColor:[[UIColor clearColor] CGColor]];
-  [line setStrokeColor:[_dividerColor CGColor]];
-  [self.layer addSublayer:line];
+  [backgroundLayer setPath:linePath.CGPath];
+  [backgroundLayer setLineWidth:_normalHeight];
+  [backgroundLayer setFillColor:[[UIColor clearColor] CGColor]];
+  [backgroundLayer setStrokeColor:[_normalColor CGColor]];
+
+  [highlightLayer setPath:linePath.CGPath];
+  [highlightLayer setLineWidth:_highlightHeight];
+  [highlightLayer setFillColor:[[UIColor clearColor] CGColor]];
+  [highlightLayer setStrokeColor:[_highlightColor CGColor]];
 }
 
 - (void)drawDashedLineDivider {
-  if ([[[self layer] sublayers] objectAtIndex:0]) {
-    self.layer.sublayers = nil;
-  }
-  CAShapeLayer *shapeLayer = [CAShapeLayer layer];
-  [shapeLayer setFillColor:[[UIColor clearColor] CGColor]];
-  [shapeLayer setStrokeColor:[_dividerColor CGColor]];
-  [shapeLayer setLineWidth:_dividerHeight];
-  [shapeLayer setLineJoin:kCALineJoinRound];
-  [shapeLayer
+  [highlightLayer removeFromSuperlayer];
+  [backgroundLayer setFillColor:[[UIColor clearColor] CGColor]];
+  [backgroundLayer setStrokeColor:[_normalColor CGColor]];
+  [backgroundLayer setLineWidth:_normalHeight];
+  [backgroundLayer setLineJoin:kCALineJoinRound];
+  [backgroundLayer
       setLineDashPattern:[NSArray arrayWithObjects:[NSNumber numberWithInt:1],
                                                    [NSNumber numberWithInt:3],
                                                    nil]];
@@ -195,10 +317,8 @@
   CGPathMoveToPoint(path, NULL, 0, 0);
   CGPathAddLineToPoint(path, NULL, self.bounds.size.width, 0);
 
-  [shapeLayer setPath:path];
+  [backgroundLayer setPath:path];
   CGPathRelease(path);
-
-  [[self layer] addSublayer:shapeLayer];
 }
 
 @end
@@ -210,6 +330,7 @@
 @property UILabel *errorView;
 @property UILabel *characterCountView;
 @property DividerView *dividerHolder;
+@property UIView *placeHolder;
 @end
 
 @implementation MDTextField {
@@ -217,6 +338,7 @@
   NSMutableDictionary *viewsDictionary;
   NSArray *constraintsArray;
   BOOL exceedsCharacterLimits;
+  BOOL sizeLimited;
 }
 @dynamic enabled;
 @synthesize text = _text;
@@ -276,7 +398,13 @@
       initWithFrame:CGRectMake(0, 67, self.bounds.size.width, 2)];
   if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_7_1)
     [_dividerHolder setLayoutMargins:UIEdgeInsetsMake(0, 0, 0, 0)];
-  [_dividerHolder setDividerColor:_normalColor];
+  [_dividerHolder setNormalColor:_normalColor];
+  [_dividerHolder setHighlightColor:_highlightColor];
+  [_dividerHolder setErrorColor:_errorColor];
+  [_dividerHolder setNormalHeight:kMDDividerHeight];
+  [_dividerHolder setHighlightHeight:kMDFocusedDividerHeight];
+
+  [self setDividerAnimation:YES];
 
   _errorView = [[UILabel alloc]
       initWithFrame:CGRectMake(0, 77, self.bounds.size.width, 15)];
@@ -313,51 +441,49 @@
   [_textView setHolder:self];
 
   [_textField addTarget:self
-                 action:@selector(updateText:)
+                 action:@selector(textChanged:)
        forControlEvents:UIControlEventEditingChanged];
 
-  _labelView.translatesAutoresizingMaskIntoConstraints = NO;
+  _placeHolder = [[UIView alloc] init];
+  if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_7_1)
+    [_placeHolder setLayoutMargins:UIEdgeInsetsMake(0, 0, 0, 0)];
+
   _labelPlaceHolder.translatesAutoresizingMaskIntoConstraints = NO;
   _textField.translatesAutoresizingMaskIntoConstraints = NO;
   _textView.translatesAutoresizingMaskIntoConstraints = NO;
   _dividerHolder.translatesAutoresizingMaskIntoConstraints = NO;
   _errorView.translatesAutoresizingMaskIntoConstraints = NO;
   _characterCountView.translatesAutoresizingMaskIntoConstraints = NO;
-  self.translatesAutoresizingMaskIntoConstraints = NO;
+  _placeHolder.translatesAutoresizingMaskIntoConstraints = NO;
 
-  [self addSubview:_labelPlaceHolder];
-  [self addSubview:_dividerHolder];
-  [self addSubview:_textField];
-  [self addSubview:_textView];
+  [_placeHolder addSubview:_labelPlaceHolder];
+  [_placeHolder addSubview:_dividerHolder];
+  [_placeHolder addSubview:_textField];
+  [_placeHolder addSubview:_textView];
   [_dividerHolder setEnabled:YES];
-  [self addSubview:_errorView];
-  [self addSubview:_characterCountView];
-  [self.layer addSublayer:_labelView.layer];
+  [_placeHolder addSubview:_errorView];
+  [_placeHolder addSubview:_characterCountView];
+  [_placeHolder addSubview:_labelView];
+  [self addSubview:_placeHolder];
 
   viewsDictionary = [@{
     @"labelView" : self.labelView,
     @"labelHolder" : self.labelPlaceHolder,
     @"errorView" : self.errorView,
     @"characterCountView" : self.characterCountView,
-    @"dividerHolder" : _dividerHolder,
+    @"dividerHolder" : self.dividerHolder,
     @"inputView" : [self getInputView],
     @"textField" : self.textField,
     @"textView" : self.textView,
+    @"placeHolder" : self.placeHolder,
   } mutableCopy];
 
-  NSArray *textFieldHeightConstraint = [NSLayoutConstraint
-      constraintsWithVisualFormat:
-          [NSString stringWithFormat:@"V:[textField(%i)]",
-                                     (int)ceil(_inputTextFont.lineHeight)]
-                          options:0
-                          metrics:nil
-                            views:viewsDictionary];
-
-  [_textField addConstraints:textFieldHeightConstraint];
   _textViewHeightConstraint = [[NSLayoutConstraint
-      constraintsWithVisualFormat:
-          [NSString stringWithFormat:@"V:[textView(%i)]",
-                                     (int)ceil(_inputTextFont.lineHeight)]
+      constraintsWithVisualFormat:[NSString
+                                      stringWithFormat:@"V:[textView(%i)]",
+                                                       (int)ceil(
+                                                           _inputTextFont
+                                                               .lineHeight)]
                           options:0
                           metrics:nil
                             views:viewsDictionary] objectAtIndex:0];
@@ -365,9 +491,11 @@
   [_textView addConstraint:_textViewHeightConstraint];
 
   NSArray *constraint_V = [NSLayoutConstraint
-      constraintsWithVisualFormat:
-          [NSString stringWithFormat:@"V:[labelHolder(%i)]",
-                                     (int)ceil(_labelView.font.lineHeight)]
+      constraintsWithVisualFormat:[NSString
+                                      stringWithFormat:@"V:[labelHolder(%i)]",
+                                                       (int)ceil(
+                                                           _labelView.font
+                                                               .lineHeight)]
                           options:0
                           metrics:nil
                             views:viewsDictionary];
@@ -376,31 +504,46 @@
   constraint_V = [NSLayoutConstraint
       constraintsWithVisualFormat:[NSString
                                       stringWithFormat:@"V:[dividerHolder(%i)]",
-                                                       kMDFocusedDividerHeight]
+                                                       kMDDividerHeight]
                           options:0
                           metrics:nil
                             views:viewsDictionary];
   [_dividerHolder addConstraints:constraint_V];
 
-  [_dividerHolder setDividerHeight:kMDDividerHeight];
+  constraint_V = [NSLayoutConstraint
+      constraintsWithVisualFormat:@"V:|-0-[placeHolder]-0@250-|"
+                          options:0
+                          metrics:nil
+                            views:viewsDictionary];
+  [self addConstraints:constraint_V];
 
   NSArray *constraint_H =
       [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[labelHolder]-0-|"
                                               options:0
                                               metrics:nil
                                                 views:viewsDictionary];
-  [super addConstraints:constraint_H];
+  [_placeHolder addConstraints:constraint_H];
 
   constraint_H = [NSLayoutConstraint
       constraintsWithVisualFormat:@"H:|-0-[dividerHolder]-0-|"
                           options:0
                           metrics:nil
                             views:viewsDictionary];
+  [_placeHolder addConstraints:constraint_H];
+
+  constraint_H =
+      [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[placeHolder]-0-|"
+                                              options:0
+                                              metrics:nil
+                                                views:viewsDictionary];
   [super addConstraints:constraint_H];
 
   [self relayout];
   suggestView = [[MDSuggestPopupView alloc] initWithTextField:self];
   self.maxCharacterCount = 0;
+  self.minVisibleLines = 1;
+  if (!_singleLine && sizeLimited)
+    [self updateMaxTextViewSize];
 }
 
 - (UIView *)getInputView {
@@ -411,7 +554,7 @@
   }
 }
 
-- (void)updateText:(id)sender {
+- (void)textChanged:(id)sender {
   if ([sender isKindOfClass:[CustomTextField class]]) {
     self.text = _textField.text;
   }
@@ -424,11 +567,6 @@
 }
 - (BOOL)becomeFirstResponder {
   return [[self getInputView] becomeFirstResponder];
-  //    if (_singleLine) {
-  //      return [_textField becomeFirstResponder];
-  //    } else {
-  //      return [_textView becomeFirstResponder];
-  //    }
 }
 - (BOOL)canResignFirstResponder {
   return [[self getInputView] canResignFirstResponder];
@@ -459,15 +597,24 @@
   [_labelView setText:label];
 }
 
-- (void)setFloatingLabel:(BOOL)floatingLabel {
-  _floatingLabel = floatingLabel;
-  if (floatingLabel) {
-    [self setPlaceholder:nil];
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
+  CGPoint locationInView = [_placeHolder convertPoint:point fromView:self];
+  if (CGRectContainsPoint(_placeHolder.bounds, locationInView))
+    return YES;
+  else
+    return NO;
+}
 
-  } else {
-    [self setPlaceholder:_hint];
+- (void)setFloatingLabel:(BOOL)floatingLabel {
+  if (_floatingLabel != floatingLabel) {
+    _floatingLabel = floatingLabel;
+    if (floatingLabel && !_fullWidth) { // fix hint not show on fullwidth mode
+      [self setPlaceholder:nil];
+    } else {
+      [self setPlaceholder:_hint];
+    }
+    [self calculateLabelFrame];
   }
-  [self calculateLabelFrame];
 }
 
 - (void)setHint:(NSString *)hint {
@@ -495,16 +642,20 @@
 
 - (void)setNormalColor:(UIColor *)normalColor {
   _normalColor = normalColor;
+  [_dividerHolder setNormalColor:_normalColor];
   [self updateState];
 }
 
 - (void)setHighlightColor:(UIColor *)highlightColor {
   _highlightColor = highlightColor;
+  [_dividerHolder setHighlightColor:_highlightColor];
   [self updateState];
 }
 
 - (void)setErrorColor:(UIColor *)errorColor {
   _errorColor = errorColor;
+  [_errorView setTextColor:errorColor]; //#19
+  [_dividerHolder setErrorColor:_errorColor];
   [self updateState];
 }
 
@@ -530,11 +681,14 @@
 }
 
 - (void)setSingleLine:(BOOL)singleLine {
-  _singleLine = singleLine;
-  _textView.hidden = singleLine;
-  _textField.hidden = !singleLine;
-
-  [self relayout];
+  if (_singleLine != singleLine) {
+    _singleLine = singleLine;
+    _textView.hidden = singleLine;
+    _textField.hidden = !singleLine;
+    [self relayout];
+    if (!_singleLine && sizeLimited)
+      [self updateMaxTextViewSize];
+  }
 }
 
 - (void)setFullWidth:(BOOL)fullWidth {
@@ -542,17 +696,17 @@
   [self relayout];
 }
 
-- (void)setMaxVisibleLines:(int)maxVisibleLines {
+- (void)setMaxVisibleLines:(NSInteger)maxVisibleLines {
   _maxVisibleLines = maxVisibleLines;
   [_textView setMaxVisibleLines:maxVisibleLines];
 }
 
-- (void)setMinVisibleLines:(int)minVisibleLines {
+- (void)setMinVisibleLines:(NSInteger)minVisibleLines {
   _minVisibleLines = minVisibleLines;
   [_textView setMinVisibleLines:minVisibleLines];
 }
 
-- (void)setMaxCharacterCount:(int)maxCharacterCount {
+- (void)setMaxCharacterCount:(NSInteger)maxCharacterCount {
   _maxCharacterCount = maxCharacterCount;
   if (_maxCharacterCount > 0) {
     _characterCountView.hidden = NO;
@@ -575,8 +729,17 @@
 
 - (void)setText:(NSString *)text {
   _text = text;
-  _textField.text = text;
-  _textView.text = text;
+
+  if (_singleLine) {
+    if (![_text isEqualToString:_textField.text]) {
+      _textField.text = text;
+    }
+  } else {
+    if (![_text isEqualToString:_textView.text]) {
+      _textView.text = text;
+    }
+  }
+
   [self updateTextLength:text.length];
   if ([_delegate respondsToSelector:@selector(textFieldDidChange:)]) {
     [_delegate textFieldDidChange:self];
@@ -607,6 +770,36 @@
   _textView.keyboardType = keyboardType;
 }
 
+- (void)setDividerAnimation:(BOOL)dividerAnimation {
+  _dividerAnimation = dividerAnimation;
+  [_dividerHolder setUseAnimation:_dividerAnimation];
+}
+
+- (void)setFrame:(CGRect)frame {
+  [super setFrame:frame];
+  if (!CGSizeEqualToSize(frame.size, CGSizeZero)) {
+    sizeLimited = YES;
+    if (!_singleLine)
+      [self updateMaxTextViewSize];
+  }
+}
+
+- (void)setInputTextFont:(UIFont *)inputTextFont {
+  _inputTextFont = inputTextFont;
+  [_textField setFont:_inputTextFont];
+  [_textView setFont:_inputTextFont];
+  [self calculateLabelFrame];
+}
+
+- (void)setLabelsFont:(UIFont *)labelsFont {
+  _labelsFont = labelsFont;
+  _labelView.font = _labelsFont;
+  _errorView.font = _labelsFont;
+  _characterCountView.font = _labelsFont;
+  [self calculateLabelFrame];
+  //  [self relayout];
+}
+
 #pragma mark getters
 - (NSString *)text {
   if (_singleLine) {
@@ -619,7 +812,7 @@
 #pragma mark Private methods
 - (void)relayout {
   if (constraintsArray)
-    [self removeConstraints:constraintsArray];
+    [_placeHolder removeConstraints:constraintsArray];
 
   [viewsDictionary setObject:[self getInputView] forKey:@"inputView"];
 
@@ -778,14 +971,16 @@
 
   constraintsArray = constraintsMutableArray;
 
-  [self addConstraints:constraintsArray];
+  [_placeHolder addConstraints:constraintsArray];
   [self calculateLabelFrame];
+  if (!_singleLine && sizeLimited)
+    [self updateMaxTextViewSize];
 }
 
 - (void)updateState {
   if (self.enabled) {
     if (_hasError || exceedsCharacterLimits) {
-      [self setViewState:ERROR];
+      [self setViewState:MDTextFieldViewStateError];
       if (!_fullWidth) {
         [[self getInputView] setTintColor:_errorColor];
       }
@@ -794,56 +989,61 @@
     } else {
       [[self getInputView] setTintColor:_highlightColor];
       if ([[self getInputView] isFirstResponder]) {
-        [self setViewState:HIGHLIGHT];
+        [self setViewState:MDTextFieldViewStateHighlighted];
       } else {
-        [self setViewState:NORMAL];
+        [self setViewState:MDTextFieldViewStateNormal];
       }
       _errorView.hidden = YES;
     }
   } else {
-    [self setViewState:DISABLED];
+    [self setViewState:MDTextFieldViewStateDisabled];
   }
 }
 
 - (void)layoutSubviews {
   [super layoutSubviews];
+  [_placeHolder layoutSubviews];
   [self calculateLabelFrame];
+  [self updateMaxTextViewSize];
 }
 
 - (void)calculateLabelFrame {
+  if (_labelView.hidden)
+    return;
   if (!_floatingLabel || [self getTextLength] > 0 ||
       [self getInputView].isFirstResponder) {
     CGRect frame = _labelPlaceHolder.frame;
-    [_labelView
-        setFrame:CGRectMake(frame.origin.x, frame.origin.y,
-                            self.bounds.size.width, _labelsFont.lineHeight)];
+    [_labelView setFrame:CGRectMake(frame.origin.x, frame.origin.y,
+                                    _placeHolder.frame.size.width,
+                                    _labelsFont.lineHeight)];
     [_labelView setFont:_labelsFont];
   } else {
     CGRect frame = [self getInputView].frame;
-    [_labelView
-        setFrame:CGRectMake(frame.origin.x, frame.origin.y,
-                            self.bounds.size.width, _inputTextFont.lineHeight)];
+    [_labelView setFrame:CGRectMake(frame.origin.x, frame.origin.y,
+                                    _placeHolder.frame.size.width,
+                                    _inputTextFont.lineHeight)];
     [_labelView setFont:_inputTextFont];
   }
 }
 
 - (void)updateTextLength:(NSUInteger)textLength {
   if (self.enabled) {
-    [_characterCountView
-        setText:[NSString stringWithFormat:@"%lu / %i",
-                                           (unsigned long)textLength,
-                                           _maxCharacterCount]];
+    if (!_characterCountView.hidden)
+      [_characterCountView
+          setText:[NSString stringWithFormat:@"%lu / %li",
+                                             (unsigned long)textLength,
+                                             (long)_maxCharacterCount]];
     if (_maxCharacterCount > 0 && textLength > _maxCharacterCount) {
       exceedsCharacterLimits = YES;
-      [self setViewState:ERROR];
+      [self setViewState:MDTextFieldViewStateError];
       [_characterCountView setTextColor:_errorColor];
     } else {
       exceedsCharacterLimits = NO;
       if (!_hasError) {
         if ([self getInputView].isFirstResponder)
-          [self setViewState:HIGHLIGHT];
+          [self setViewState:MDTextFieldViewStateHighlighted];
         else
-          [self setViewState:NORMAL];
+          [self setViewState:MDTextFieldViewStateNormal];
       }
 
       [_characterCountView setTextColor:_normalColor];
@@ -851,44 +1051,44 @@
   }
 }
 
-- (void)setViewState:(enum ViewState)state {
-  switch (state) {
-  case NORMAL:
-    if (!_fullWidth) {
-      [_dividerHolder setDividerColor:_normalColor];
-      [_dividerHolder setDividerHeight:kMDDividerHeight];
-    }
-    [_labelView setTextColor:_normalColor];
-    [self updateTextColor:_textColor];
-    break;
-  case HIGHLIGHT:
-    if (!_fullWidth) {
-      [_dividerHolder setDividerHeight:kMDFocusedDividerHeight];
-      [_dividerHolder setDividerColor:_highlightColor];
-    }
-    if (_highlightLabel) {
-      [_labelView setTextColor:_highlightColor];
-    }
-    [self updateTextColor:_textColor];
-    break;
-  case ERROR:
-    if (!_fullWidth) {
-      [_dividerHolder setDividerHeight:kMDFocusedDividerHeight];
-      [_dividerHolder setDividerColor:_errorColor];
-    }
-    if (_highlightLabel) {
-      [_labelView setTextColor:_errorColor];
-    }
-    [self updateTextColor:_textColor];
-    break;
-  case DISABLED:
-    [_dividerHolder setDividerHeight:kMDDividerHeight];
-    [_dividerHolder setDividerColor:_normalColor];
-    [self updateTextColor:_disabledColor];
-    break;
+- (void)setViewState:(MDTextFieldViewState)state {
+  if (_viewState != state) {
+    _viewState = state;
 
-  default:
-    break;
+    switch (state) {
+    case MDTextFieldViewStateNormal:
+      if (!_fullWidth) {
+        [_dividerHolder setState:MDTextFieldViewStateNormal];
+      }
+      [_labelView setTextColor:_normalColor];
+      [self updateTextColor:_textColor];
+      break;
+    case MDTextFieldViewStateHighlighted:
+      if (!_fullWidth) {
+        [_dividerHolder setState:MDTextFieldViewStateHighlighted];
+      }
+      if (_highlightLabel) {
+        [_labelView setTextColor:_highlightColor];
+      }
+      [self updateTextColor:_textColor];
+      break;
+    case MDTextFieldViewStateError:
+      if (!_fullWidth) {
+        [_dividerHolder setState:MDTextFieldViewStateError];
+      }
+      if (_highlightLabel) {
+        [_labelView setTextColor:_errorColor];
+      }
+      [self updateTextColor:_textColor];
+      break;
+    case MDTextFieldViewStateDisabled:
+      [_dividerHolder setState:MDTextFieldViewStateDisabled];
+      [self updateTextColor:_disabledColor];
+      break;
+
+    default:
+      break;
+    }
   }
 }
 
@@ -899,12 +1099,12 @@
 
 - (void)inputTextDidBeginEditing:(NSUInteger)textLength {
   if (_hasError)
-    [self setViewState:ERROR];
+    [self setViewState:MDTextFieldViewStateError];
   else if (_maxCharacterCount > 0 && textLength > _maxCharacterCount) {
-    [self setViewState:ERROR];
+    [self setViewState:MDTextFieldViewStateError];
     [_characterCountView setTextColor:_errorColor];
   } else
-    [self setViewState:HIGHLIGHT];
+    [self setViewState:MDTextFieldViewStateHighlighted];
 
   if (_floatingLabel && (textLength == 0) && !_fullWidth) {
     CABasicAnimation *scaleAnim =
@@ -938,9 +1138,9 @@
 
 - (void)inputTextDidEndEditing:(NSUInteger)textLength {
   if (_hasError)
-    [self setViewState:ERROR];
+    [self setViewState:MDTextFieldViewStateError];
   else
-    [self setViewState:NORMAL];
+    [self setViewState:MDTextFieldViewStateNormal];
 
   if (_floatingLabel && (textLength == 0) && !_fullWidth) {
     CABasicAnimation *scaleAnim =
@@ -975,18 +1175,44 @@
   return [self convertRect:[self getInputView].frame toView:nil];
 }
 
+- (void)updateMaxTextViewSize {
+  if (_restrictInBounds) {
+    _textView.maxHeight =
+        self.frame.size.height - [self requiredHeightWithNumberOfTextLines:0];
+  }
+}
+
+- (float)requiredHeightWithNumberOfTextLines:(NSUInteger)numberOfLines {
+  float requiredHeight = 0;
+  if (!_fullWidth) {
+    requiredHeight += numberOfLines * _inputTextFont.lineHeight +
+                      kMDNormalPadding * 2 + kMDLargePadding + kMDDividerHeight;
+    if (_label.length > 0)
+      requiredHeight += kMDNormalPadding + _labelsFont.lineHeight;
+    if (_maxCharacterCount > 0 || _errorMessage.length > 0)
+      requiredHeight += kMDNormalPadding + _labelsFont.lineHeight;
+  } else {
+    requiredHeight += numberOfLines * _inputTextFont.lineHeight +
+                      kMDExtraLargePadding * 2 + kMDDividerHeight;
+    if (!_singleLine)
+      requiredHeight += _labelsFont.lineHeight + kMDNormalPadding;
+  }
+
+  return requiredHeight;
+}
+
 #pragma mark CAAnimationDelegate implement
 - (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag {
   if ([[anim valueForKey:@"id"] isEqualToString:kMDLabelMoveUpAnimationKey]) {
     [_labelView setFont:_labelsFont];
-    _labelView.layer.frame = _labelPlaceHolder.frame;
+    _labelView.frame = _labelPlaceHolder.frame;
   } else if ([[anim valueForKey:@"id"]
                  isEqualToString:kMDLabelMoveDownAnimationKey]) {
     [_labelView setFont:_inputTextFont];
     CGRect frame = [self getInputView].frame;
-    _labelView.layer.frame =
-        CGRectMake(frame.origin.x, frame.origin.y, self.bounds.size.width,
-                   _inputTextFont.lineHeight);
+    _labelView.frame =
+        CGRectMake(frame.origin.x, frame.origin.y,
+                   _placeHolder.bounds.size.width, _inputTextFont.lineHeight);
   }
 
   [_labelView.layer removeAllAnimations];
@@ -1047,8 +1273,6 @@
   if ([_delegate respondsToSelector:@selector(textFieldShouldReturn:)]) {
     shouldReturn = [_delegate textFieldShouldReturn:self];
   }
-  //  if (shouldReturn)
-  //    [textField resignFirstResponder];
   return shouldReturn;
 }
 
@@ -1097,7 +1321,10 @@
 
 #pragma mark BaseTextInput methods
 - (NSUInteger)getTextLength {
-  return _textField.text.length;
+  if (_singleLine)
+    return _textField.text.length;
+  else
+    return _textView.text.length;
 }
 
 @end

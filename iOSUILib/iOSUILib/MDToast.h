@@ -21,18 +21,24 @@
 // THE SOFTWARE.
 
 #import <UIKit/UIKit.h>
+#import "UIView+MDExtension.h"
 
 #define kMDToastDurationLong 3.5f
 #define kMDToastDurationShort 2
 
+NS_ASSUME_NONNULL_BEGIN
 @interface MDToast : UIControl
 
-@property(nonatomic) NSString *text;
-@property(nonatomic) UIColor *textColor;
-@property(nonatomic) double duration;
+@property(nullable, nonatomic) NSString *text;
+@property(nullable, nonatomic) UIColor *textColor;
+@property(nullable, nonatomic) UIFont *textFont;
+@property(nonatomic) NSTimeInterval duration;
 @property(nonatomic, readonly) BOOL isShowing;
+@property(nonatomic) MDGravity gravity;
 
-- (instancetype)initWithText:(NSString *)text duration:(double)duration;
+- (instancetype)initWithText:(NSString *)text duration:(NSTimeInterval)duration;
+- (void)setGravity:(MDGravity)gravity xOffset:(int)xOffset yOffset:(int)yOffset;
 - (void)show;
 - (void)dismiss;
 @end
+NS_ASSUME_NONNULL_END

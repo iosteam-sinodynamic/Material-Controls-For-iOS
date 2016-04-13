@@ -29,17 +29,18 @@
 
 @implementation NormalTextFieldViewController {
   MDTextField *activeField;
+  NSArray *inputAccessoryViews;
+  CGFloat inputAccessoryViewHeight;
 }
 
 - (void)viewDidLoad {
   [super viewDidLoad];
-  // Do any additional setup after loading the view from its nib.
-  _autoCompleteTextField.delegate = self;
-  _normalTextField.delegate = self;
-  _labeledTextField.delegate = self;
-  _characterCounterTextField.delegate = self;
 
-  [_autoCompleteTextField
+  for (MDTextField *textField in _textFields) {
+    textField.delegate = self;
+  }
+
+  [[_textFields objectAtIndex:3]
       setSuggestionsDictionary:[MockData allCountriesArray]];
 
   UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]
@@ -56,6 +57,11 @@
                                         attribute:NSLayoutAttributeTrailing
                                        multiplier:1
                                          constant:0]];
+
+  [self createInputAccessoryView];
+  for (UITextField *field in _textFields) {
+    [field setInputAccessoryView:[inputAccessoryViews objectAtIndex:field.tag]];
+  }
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -99,18 +105,19 @@
   NSDictionary *info = [aNotification userInfo];
   CGSize kbSize =
       [[info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
-  UIEdgeInsets contentInsets = UIEdgeInsetsMake(0.0, 0.0, kbSize.height, 0.0);
+  CGFloat kbHeight = kbSize.height + inputAccessoryViewHeight;
+  UIEdgeInsets contentInsets = UIEdgeInsetsMake(0.0, 0.0, kbHeight, 0.0);
   _scrollView.contentInset = contentInsets;
   _scrollView.scrollIndicatorInsets = contentInsets;
 
   // If active text field is hidden by keyboard, scroll it so it's visible
   // Your application might not need or want this behavior.
   CGRect aRect = self.view.frame;
-  aRect.size.height -= kbSize.height;
+  aRect.size.height -= kbHeight;
   CGPoint p = CGPointMake(0, activeField.frame.origin.y +
                                  activeField.frame.size.height);
   if (!CGRectContainsPoint(aRect, p)) {
-    CGPoint scrollPoint = CGPointMake(0.0, p.y - kbSize.height);
+    CGPoint scrollPoint = CGPointMake(0.0, p.y - aRect.size.height);
     [_scrollView setContentOffset:scrollPoint animated:YES];
   }
 }
@@ -122,6 +129,10 @@
   _scrollView.scrollIndicatorInsets = contentInsets;
 }
 
+- (BOOL)textFieldShouldBeginEditing:(MDTextField *)textField {
+  return YES;
+}
+
 - (void)textFieldDidBeginEditing:(MDTextField *)textField {
   activeField = textField;
 }
@@ -131,7 +142,8 @@
 }
 
 - (void)textFieldDidChange:(MDTextField *)textField {
-  if (textField == _characterCounterTextField) {
+  // if textfield is characterCounterTextField
+  if (textField.tag == 1) {
     if (textField.text.length > textField.maxCharacterCount) {
       textField.errorMessage = @"Message is too long";
       textField.hasError = YES;
@@ -139,6 +151,66 @@
       textField.hasError = NO;
     }
   }
+}
+
+- (void)createInputAccessoryView {
+  inputAccessoryViews = [[NSArray alloc]
+      initWithObjects:[[UIToolbar alloc] init], [[UIToolbar alloc] init],
+                      [[UIToolbar alloc] init], [[UIToolbar alloc] init], nil];
+
+  for (UIToolbar *inputAccView in inputAccessoryViews) {
+    UIBarButtonItem *prevButton = [[UIBarButtonItem alloc]
+        initWithBarButtonSystemItem:101
+                             target:nil
+                             action:@selector(gotoPrevTextfield)];
+    UIBarButtonItem *nextButton = [[UIBarButtonItem alloc]
+        initWithBarButtonSystemItem:102
+                             target:nil
+                             action:@selector(gotoNextTextfield)];
+    UIBarButtonItem *doneButton =
+        [[UIBarButtonItem alloc] initWithTitle:@"Done"
+                                         style:UIBarButtonItemStylePlain
+                                        target:nil
+                                        action:@selector(dismissKeyboard)];
+    UIBarButtonItem *flexSpace = [[UIBarButtonItem alloc]
+        initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
+                             target:nil
+                             action:nil];
+    UIBarButtonItem *placeholder =
+        [[UIBarButtonItem alloc] initWithTitle:@""
+                                         style:UIBarButtonItemStylePlain
+                                        target:nil
+                                        action:nil];
+
+    [inputAccView sizeToFit];
+    inputAccessoryViewHeight = inputAccView.frame.size.height;
+    [inputAccView
+        setItems:[NSArray arrayWithObjects:prevButton, placeholder, nextButton,
+                                           placeholder, flexSpace, placeholder,
+                                           doneButton, nil]
+        animated:YES];
+
+    // disable the previous button in the first accessory view
+    ((UIBarButtonItem *)[((UIToolbar *)[inputAccessoryViews objectAtIndex:0])
+                             .items objectAtIndex:0])
+        .enabled = NO;
+    // disable the next button in the last accessory view
+    ((UIBarButtonItem *)[((UIToolbar *)[inputAccessoryViews objectAtIndex:3])
+                             .items objectAtIndex:2])
+        .enabled = NO;
+  }
+}
+
+- (void)gotoPrevTextfield {
+  [[_textFields objectAtIndex:(activeField.tag - 1)] becomeFirstResponder];
+}
+
+- (void)gotoNextTextfield {
+  [[_textFields objectAtIndex:(activeField.tag + 1)] becomeFirstResponder];
+}
+
+- (void)doneTyping {
+  [activeField resignFirstResponder];
 }
 
 @end

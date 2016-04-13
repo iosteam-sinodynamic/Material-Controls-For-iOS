@@ -51,6 +51,7 @@
 }
 
 #pragma mark setters
+
 - (void)setTintColor:(UIColor *)tintColor {
   [super setTintColor:tintColor];
 
@@ -86,17 +87,25 @@
   [placeholderLabel setTextColor:_placeholderColor];
 }
 
-- (void)setMinVisibleLines:(int)minVisibleLines {
+- (void)setMinVisibleLines:(NSInteger)minVisibleLines {
   _minVisibleLines = minVisibleLines;
   [self calculateTextViewHeight];
 }
 
-- (void)setMaxVisibleLines:(int)maxVisibleLines {
+- (void)setMaxVisibleLines:(NSInteger)maxVisibleLines {
   _maxVisibleLines = maxVisibleLines;
   [self calculateTextViewHeight];
 }
 
+- (void)setMaxHeight:(float)maxHeight {
+  if (_maxHeight != maxHeight) {
+    _maxHeight = maxHeight;
+    [self calculateTextViewHeight];
+  }
+}
+
 #pragma mark private methods
+
 - (void)layoutSubviews {
   [super layoutSubviews];
   [placeholderLabel
@@ -106,6 +115,11 @@
 
 - (void)textViewDidChangeWithNotification:(NSNotification *)notification {
   if (notification.object == self && !settingText) {
+    if (self.text.length >= 1) {
+      placeholderLabel.hidden = YES;
+    } else {
+      placeholderLabel.hidden = NO;
+    }
     [self calculateTextViewHeight];
   }
 }
@@ -125,7 +139,6 @@
 - (CGFloat)intrinsicContentHeight {
   if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
     CGRect frame = self.bounds;
-
     UIEdgeInsets textContainerInsets = self.textContainerInset;
     UIEdgeInsets contentInsets = self.contentInset;
 
@@ -173,33 +186,42 @@
   float visibleHeight = minHeight > contentHeight ? minHeight : contentHeight;
   self.contentSize = CGSizeMake(self.contentSize.width, contentHeight);
 
-  if (_maxVisibleLines <= 0) {
-
+  if (_maxVisibleLines <= 0 && _maxHeight <= 0) {
     if (visibleHeight != self.frame.size.height) {
-
       _holder.textViewHeightConstraint.constant = visibleHeight;
-      CGRect frame = self.frame;
-      [self setFrame:CGRectMake(frame.origin.x, frame.origin.y,
-                                frame.size.width, visibleHeight)];
     }
-  } else {
-
+  } else if (_maxHeight <= 0) { // _maxVisibleLines > 0
     if ((lastNumLine <= _maxVisibleLines) && (numLines > _maxVisibleLines)) {
-
       self.scrollEnabled = YES;
       [self scrollToCaret];
-
     } else if ((lastNumLine > _maxVisibleLines) &&
                (numLines <= _maxVisibleLines)) {
-
       [self setScrollEnabled:NO];
       _holder.textViewHeightConstraint.constant = visibleHeight;
-
     } else if (numLines > _maxVisibleLines) {
-
       [self scrollToCaret];
-
     } else if (visibleHeight != self.frame.size.height) {
+      _holder.textViewHeightConstraint.constant = visibleHeight;
+    }
+  } else {
+    float maxHeight = _maxHeight;
+    if (_maxVisibleLines > 0) {
+      float maxVisibleHeight = _maxVisibleLines * self.font.lineHeight;
+      if (maxVisibleHeight < maxHeight)
+        maxHeight = maxVisibleHeight;
+    }
+    if (maxHeight < self.font.lineHeight)
+      maxHeight = self.font.lineHeight;
+
+    if (minHeight > maxHeight)
+      minHeight = maxHeight;
+    visibleHeight = minHeight > contentHeight ? minHeight : contentHeight;
+    if (maxHeight < visibleHeight) {
+      self.scrollEnabled = YES;
+      _holder.textViewHeightConstraint.constant = maxHeight;
+      [self scrollToCaret];
+    } else {
+      self.scrollEnabled = NO;
 
       _holder.textViewHeightConstraint.constant = visibleHeight;
     }
@@ -212,4 +234,7 @@
   [self setContentOffset:bottomOffset animated:NO];
 }
 
+- (void)dealloc {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
 @end

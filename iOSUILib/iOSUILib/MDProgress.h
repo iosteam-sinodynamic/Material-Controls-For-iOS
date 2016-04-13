@@ -22,26 +22,30 @@
 
 #import <UIKit/UIKit.h>
 
-enum MDProgressStyle { Circular, Linear };
+typedef NS_ENUM(NSInteger, MDProgressStyle) {
+  MDProgressStyleCircular,
+  MDProgressStyleLinear
+};
 
-enum MDProgressType {
-  Indeterminate,
-  Determinate,
-  //  Buffer,
-  //  QueryIndeterminateAndDeterminate
+typedef NS_ENUM(NSInteger, MDProgressType) {
+  MDProgressTypeIndeterminate,
+  MDProgressTypeDeterminate,
+  //  MDProgressTypeBuffer,
+  //  MDProgressTypeQueryIndeterminateAndDeterminate
 };
 
 @interface MDProgress : UIView
 
-@property(nonatomic)  UIColor *progressColor;
-@property(nonatomic)  UIColor *trackColor;
-@property(nonatomic) enum MDProgressType progressType;
-@property(nonatomic) enum MDProgressStyle progressStyle;
+@property(nonatomic) IBInspectable UIColor *progressColor;
+@property(nonatomic) IBInspectable UIColor *trackColor;
+@property(nonatomic) MDProgressType progressType;
+@property(nonatomic) MDProgressStyle progressStyle;
 
-@property(nonatomic)  int type;
-@property(nonatomic)  int style;
-@property(nonatomic)  float trackWidth;
+@property(nonatomic) IBInspectable NSInteger type;
+@property(nonatomic) IBInspectable NSInteger style;
+@property(nonatomic) IBInspectable CGFloat trackWidth;
+@property(nonatomic) IBInspectable CGFloat circularSize;
 
-@property(nonatomic)  float progress;
-@property(nonatomic)  BOOL enableTrackColor;
+@property(nonatomic) IBInspectable CGFloat progress;
+@property(nonatomic) IBInspectable BOOL enableTrackColor;
 @end

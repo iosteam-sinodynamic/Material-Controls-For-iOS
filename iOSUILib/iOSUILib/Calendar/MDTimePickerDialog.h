@@ -27,12 +27,15 @@
 
 @class MDTimePickerDialog;
 
-typedef NS_OPTIONS(NSInteger, MDCalendarTimeMode) {
-  MDCalendarTimeMode12H,
-  MDCalendarTimeMode24H
+typedef NS_ENUM(NSInteger, MDClockMode) { MDClockMode12H, MDClockMode24H };
+
+typedef NS_ENUM(NSInteger, MDTimePickerTheme) {
+  MDTimePickerThemeLight = 1,
+  MDTimePickerThemeDark,
 };
 
-@protocol MDCalendarTimePickerDialogDelegate <NSObject>
+NS_ASSUME_NONNULL_BEGIN
+@protocol MDTimePickerDialogDelegate <NSObject>
 
 - (void)timePickerDialog:(MDTimePickerDialog *)timePickerDialog
            didSelectHour:(NSInteger)hour
@@ -40,24 +43,31 @@ typedef NS_OPTIONS(NSInteger, MDCalendarTimeMode) {
 
 @end
 
-@class MDButton;
-@interface MDTimePickerDialog : UIButton <UIGestureRecognizerDelegate>
+@interface MDTimePickerDialog : UIControl
 
-@property(nonatomic) id<MDCalendarTimePickerDialogDelegate> delegate;
+/// note: these colors are set by the theme
+@property(nonatomic, strong) UIColor *titleColor;
+@property(nonatomic, strong) UIColor *titleSelectedColor;
+@property(nonatomic, strong) UIColor *headerTextColor;
+@property(nonatomic, strong) UIColor *headerBackgroundColor;
+@property(nonatomic, strong) UIColor *selectionColor;
+@property(nonatomic, strong) UIColor *selectionCenterColor;
+@property(nonatomic, strong) UIColor *backgroundPopupColor;
+@property(nonatomic, strong) UIColor *backgroundClockColor;
+@property(nonatomic) MDClockMode clockMode;
 
-@property(nonatomic) MDCalendarTimeMode timeMode;
+@property(nonatomic, assign) MDTimePickerTheme theme;
 
-@property(nonatomic) UIView *header;
-@property(nonatomic) UILabel *headerLabelHour;
-@property(nonatomic) UILabel *headerLabelMinute;
-@property(nonatomic) UILabel *headerLabelTimeMode;
+@property(nonatomic, weak) id<MDTimePickerDialogDelegate> delegate;
 
-@property(nonatomic) MDButton *buttonOk;
-@property(nonatomic) MDButton *buttonCancel;
-@property(nonatomic) UIFont *buttonFont;
-
-- (instancetype)initWithHour:(NSInteger)hour andWithMinute:(NSInteger)minute;
+- (instancetype)initWithHour:(NSInteger)hour minute:(NSInteger)minute;
+- (instancetype)initWithClockMode:(MDClockMode)clockMode;
+- (instancetype)initWithHour:(NSInteger)hour
+                      minute:(NSInteger)minute
+                   clockMode:(MDClockMode)clockMode;
 - (void)show;
-
+- (void)setTitleOk:(nonnull NSString *)okTitle
+    andTitleCancel:(nonnull NSString *)cancelTitle;
 @end
+NS_ASSUME_NONNULL_END
 #endif

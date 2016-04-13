@@ -23,21 +23,33 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+NS_ASSUME_NONNULL_BEGIN
 @interface UIViewHelper : NSObject
 
 + (NSLayoutConstraint *)addConstraintWithItem:(id)view1
                                     attribute:(NSLayoutAttribute)attr1
                                     relatedBy:(NSLayoutRelation)relation
-                                       toItem:(id)view2
+                                       toItem:(nullable id)view2
                                     attribute:(NSLayoutAttribute)attr2
                                    multiplier:(CGFloat)multiplier
                                      constant:(CGFloat)c
                                        toView:(UIView *)view;
-+ (NSArray *)addConstraintsWithVisualFormat:(NSString *)format
-                                    options:(NSLayoutFormatOptions)opts
-                                    metrics:(NSDictionary *)metrics
-                                      views:(NSDictionary *)views
-                                     toView:(UIView *)view;
++ (NSLayoutConstraint *)addConstraintWithItem:(id)view1
+                                    attribute:(NSLayoutAttribute)attr1
+                                    relatedBy:(NSLayoutRelation)relation
+                                       toItem:(nullable id)view2
+                                    attribute:(NSLayoutAttribute)attr2
+                                   multiplier:(CGFloat)multiplier
+                                     constant:(CGFloat)c
+                                     priority:(UILayoutPriority)priority
+                                       toView:(UIView *)view;
+
++ (NSArray<NSLayoutConstraint *> *)
+addConstraintsWithVisualFormat:(NSString *)format
+                       options:(NSLayoutFormatOptions)opts
+                       metrics:(nullable NSDictionary<NSString *, id> *)metrics
+                         views:(NSDictionary<NSString *, id> *)views
+                        toView:(UIView *)view;
 
 @end
 
@@ -49,3 +61,4 @@ CG_INLINE CGPoint CGRectCenter(CGRect rect) {
   return CGPointMake(CGRectGetMidX(rect), CGRectGetMidY(rect));
 }
 CF_IMPLICIT_BRIDGING_DISABLED
+NS_ASSUME_NONNULL_END

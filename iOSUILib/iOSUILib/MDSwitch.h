@@ -21,16 +21,14 @@
 // THE SOFTWARE.
 
 #import <UIKit/UIKit.h>
-
-
 @interface MDSwitch : UIControl
 
 @property(nonatomic, getter=isOn)  BOOL on;
 //@property(nonatomic, getter=isEnabled) IBInspectable BOOL enabled;
-@property(nonatomic)  UIColor *thumbOn;
-@property(nonatomic)  UIColor *trackOn;
-@property(nonatomic)  UIColor *thumbOff;
-@property(nonatomic)  UIColor *trackOff;
-@property(nonatomic)  UIColor *thumbDisabled;
-@property(nonatomic)  UIColor *trackDisabled;
+@property(nonatomic) UIColor *thumbOn;
+@property(nonatomic) UIColor *trackOn;
+@property(nonatomic) UIColor *thumbOff;
+@property(nonatomic) UIColor *trackOff;
+@property(nonatomic) UIColor *thumbDisabled;
+@property(nonatomic) UIColor *trackDisabled;
 @end

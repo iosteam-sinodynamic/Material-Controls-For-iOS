@@ -27,26 +27,38 @@
 
 @class MDTabBar;
 
+NS_ASSUME_NONNULL_BEGIN
 @protocol MDTabBarDelegate <NSObject>
 - (void)tabBar:(MDTabBar *)tabBar
     didChangeSelectedIndex:(NSUInteger)selectedIndex;
-
 @end
 
+@interface MDTabBar : UIView
 
-@interface MDTabBar : UIControl
+/// selected text color
+@property(null_unspecified, nonatomic) IBInspectable UIColor *textColor;
+/// normal (not selected) text color
+@property(null_unspecified, nonatomic) IBInspectable UIColor *normalTextColor;
+@property(null_unspecified, nonatomic) IBInspectable UIColor *backgroundColor;
+@property(null_unspecified, nonatomic) IBInspectable UIColor *indicatorColor;
+@property(null_unspecified, nonatomic) IBInspectable UIColor *rippleColor;
 
-@property(nonatomic)  UIColor *textColor;
-@property(nonatomic)  UIColor *backgroundColor;
-@property(nonatomic)  UIColor *indicatorColor;
-@property(nonatomic)  UIColor *rippleColor;
+/// selected font
+@property(nullable, nonatomic) UIFont *textFont;
+/// normal (not selected) font
+@property(nullable, nonatomic) UIFont *normalTextFont;
 
-@property(nonatomic) UIFont *textFont;
+/// inset from the side (default: 8)
+@property(nonatomic, assign) CGFloat horizontalInset;
+
+/// padding for each item in tab bar (default: iPhone=12, iPad=24) Values <4 can cause labels to be truncated
+@property(nonatomic, assign) CGFloat horizontalPaddingPerItem;
+
 @property(nonatomic) NSUInteger selectedIndex;
 @property(nonatomic, weak) id<MDTabBarDelegate> delegate;
 @property(nonatomic, readonly) NSInteger numberOfItems;
 
-- (void)setItems:(NSArray *)items;
+- (void)setItems:(NSArray <id>*)items;
 
 - (void)insertItem:(id)item atIndex:(NSUInteger)index animated:(BOOL)animated;
 
@@ -54,8 +66,9 @@
 
 - (void)replaceItem:(id)item atIndex:(NSUInteger)index;
 
-- (NSMutableArray *)tabs;
+- (NSArray <UIView*>*)tabs;
 
 - (void)moveIndicatorToFrame:(CGRect)frame withAnimated:(BOOL)animated;
 
 @end
+NS_ASSUME_NONNULL_END

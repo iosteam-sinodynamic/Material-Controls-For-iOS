@@ -28,25 +28,22 @@
 #import <Foundation/Foundation.h>
 #import "UIFontHelper.h"
 
-#define kMDContentHorizontalPaddingIPad 24
-#define kMDContentHorizontalPaddingIPhone 2
-#define kMDTabBarHorizontalInset 8
-
-#define DISABLED_TEXT_ALPHA .6
+#pragma mark - MDTabBar
 
 @interface MDTabBar ()
-
 - (void)updateSelectedIndex:(NSInteger)selectedIndex;
 @end
 
+#pragma mark - MDSegmentedControl
+
 @interface MDSegmentedControl : UISegmentedControl
 
+@property(nonatomic) CGFloat horizontalPadding;
 @property(nonatomic) UIColor *rippleColor;
 @property(nonatomic) UIColor *indicatorColor;
-@property(nonatomic) NSMutableArray *tabs;
+@property(nonatomic) NSMutableArray<UIView *> *tabs;
 - (CGRect)getSelectedSegmentFrame;
 - (void)setTextFont:(UIFont *)textFont withColor:(UIColor *)textColor;
-
 @end
 
 @implementation MDSegmentedControl {
@@ -68,6 +65,7 @@
                   action:@selector(selectionChanged:)
         forControlEvents:UIControlEventValueChanged];
     tabBar = bar;
+      
   }
 
   return self;
@@ -185,15 +183,27 @@
 
 - (void)setTextFont:(UIFont *)textFont withColor:(UIColor *)textColor {
   font = textFont;
-  [self setTitleTextAttributes:@{
-    NSForegroundColorAttributeName :
-        [textColor colorWithAlphaComponent:DISABLED_TEXT_ALPHA],
-    NSFontAttributeName : textFont
-  } forState:UIControlStateNormal];
-  [self setTitleTextAttributes:@{
+  CGFloat disabledTextAlpha = 0.6;
+  UIColor *normalTextColor = tabBar.normalTextColor;
+  if (normalTextColor == nil) {
+    normalTextColor = [textColor colorWithAlphaComponent:disabledTextAlpha];
+  }
+
+  UIFont *normalTextFont = tabBar.normalTextFont;
+  if (normalTextFont == nil) {
+    normalTextFont = textFont;
+  }
+  NSDictionary *attributes = @{
+    NSForegroundColorAttributeName : normalTextColor,
+    NSFontAttributeName : normalTextFont
+  };
+  [self setTitleTextAttributes:attributes forState:UIControlStateNormal];
+  NSDictionary *selectedAttributes = @{
     NSForegroundColorAttributeName : textColor,
     NSFontAttributeName : textFont
-  } forState:UIControlStateSelected];
+  };
+  [self setTitleTextAttributes:selectedAttributes
+                      forState:UIControlStateSelected];
 }
 
 - (void)moveIndicatorToFrame:(CGRect)frame withAnimated:(BOOL)animated {
@@ -219,12 +229,12 @@
   CGFloat maxItemSize = 0;
   CGFloat segmentedControlWidth = 0;
 
+  NSDictionary *attributes = @{NSFontAttributeName : font};
   for (int i = 0; i < self.numberOfSegments; i++) {
     NSString *title = [self titleForSegmentAtIndex:i];
     CGSize itemSize = CGSizeZero;
     if (title) {
-      itemSize = [title sizeWithAttributes:@{NSFontAttributeName : font}];
-
+      itemSize = [title sizeWithAttributes:attributes];
     } else {
       UIImage *image = [self imageForSegmentAtIndex:i];
       CGFloat height = self.bounds.size.height;
@@ -232,11 +242,8 @@
       itemSize = CGSizeMake(width, height);
     }
 
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-      itemSize.width += kMDContentHorizontalPaddingIPad * 2;
-    else
-      itemSize.width += kMDContentHorizontalPaddingIPhone * 2;
-
+    itemSize.width += self.horizontalPadding * 2;
+      
     [self setWidth:itemSize.width forSegmentAtIndex:i];
 
     segmentedControlWidth += (itemSize.width);
@@ -245,7 +252,7 @@
   }
 
   CGFloat holderWidth =
-      self.superview.bounds.size.width - kMDTabBarHorizontalInset * 2;
+      self.superview.bounds.size.width - tabBar.horizontalInset * 2;
   if (segmentedControlWidth < holderWidth) {
     if (self.numberOfSegments * maxItemSize < holderWidth) {
       maxItemSize = holderWidth / self.numberOfSegments;
@@ -384,7 +391,8 @@
 
 @end
 
-#pragma mark MDTabBar
+#pragma mark - MDTabBar
+
 @implementation MDTabBar {
   MDSegmentedControl *segmentedControl;
   UIScrollView *scrollView;
@@ -424,13 +432,15 @@
 - (void)layoutSubviews {
   [super layoutSubviews];
   scrollView.frame = CGRectMake(0, 0, self.bounds.size.width, kMDTabBarHeight);
-  [scrollView setContentInset:UIEdgeInsetsMake(0, kMDTabBarHorizontalInset, 0,
-                                               kMDTabBarHorizontalInset)];
+  [scrollView setContentInset:UIEdgeInsetsMake(0, self.horizontalInset, 0,
+                                               self.horizontalInset)];
   [scrollView setContentSize:segmentedControl.bounds.size];
 }
 
 #pragma mark Private methods
 - (void)initContent {
+  self.horizontalInset = 8;
+
   segmentedControl = [[MDSegmentedControl alloc] initWithTabBar:self];
   [segmentedControl setTintColor:[UIColor clearColor]];
 
@@ -442,6 +452,9 @@
   [scrollView addSubview:segmentedControl];
 
   [self addSubview:scrollView];
+  
+  self.horizontalPaddingPerItem = (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) ? 24 : 12;
+  segmentedControl.horizontalPadding = self.horizontalPaddingPerItem;
 
   [self setBackgroundColor:[UIColorHelper colorWithRGBA:kMDColorPrimary500]];
   self.layer.shadowColor = [UIColor blackColor].CGColor;
@@ -487,14 +500,15 @@
 
 - (void)scrollToSelectedIndex {
   CGRect frame = [segmentedControl getSelectedSegmentFrame];
-  CGFloat contentOffset = frame.origin.x + kMDTabBarHorizontalInset -
+  CGFloat horizontalInset = self.horizontalInset;
+  CGFloat contentOffset = frame.origin.x + horizontalInset -
                           (self.frame.size.width - frame.size.width) / 2;
-  if (contentOffset > scrollView.contentSize.width + kMDTabBarHorizontalInset -
-                          self.frame.size.width) {
-    contentOffset = scrollView.contentSize.width + kMDTabBarHorizontalInset -
-                    self.frame.size.width;
-  } else if (contentOffset < -kMDTabBarHorizontalInset) {
-    contentOffset = -kMDTabBarHorizontalInset;
+  if (contentOffset >
+      scrollView.contentSize.width + horizontalInset - self.frame.size.width) {
+    contentOffset =
+        scrollView.contentSize.width + horizontalInset - self.frame.size.width;
+  } else if (contentOffset < -horizontalInset) {
+    contentOffset = -horizontalInset;
   }
 
   [scrollView setContentOffset:CGPointMake(contentOffset, 0) animated:YES];
@@ -550,6 +564,12 @@
   [segmentedControl moveIndicatorToFrame:frame withAnimated:animated];
 }
 
+- (void) setHorizontalPaddingPerItem:(CGFloat)padding;
+{
+  _horizontalPaddingPerItem = padding;
+  segmentedControl.horizontalPadding = padding;
+}
+
 #pragma mark Setters
 
 - (void)setBackgroundColor:(UIColor *)backgroundColor {
@@ -559,6 +579,12 @@
 
 - (void)setTextColor:(UIColor *)textColor {
   _textColor = textColor;
+  [self updateItemAppearance];
+}
+
+- (void)setNormalTextColor:(UIColor *)normalTextColor;
+{
+  _normalTextColor = normalTextColor;
   [self updateItemAppearance];
 }
 
@@ -577,6 +603,11 @@
   [self updateItemAppearance];
 }
 
+- (void)setNormalTextFont:(UIFont *)normalTextFont {
+  _normalTextFont = normalTextFont;
+  [self updateItemAppearance];
+}
+
 - (void)setSelectedIndex:(NSUInteger)selectedIndex {
   if (selectedIndex < segmentedControl.numberOfSegments) {
     _selectedIndex = selectedIndex;
@@ -587,12 +618,18 @@
   }
 }
 
+- (void)setHorizontalInset:(CGFloat)horizontalInset;
+{
+  _horizontalInset = horizontalInset;
+  [self setNeedsLayout];
+}
+
 - (NSInteger)numberOfItems {
   return segmentedControl.numberOfSegments;
 }
 
-- (NSMutableArray *)tabs {
-  return segmentedControl.tabs;
+- (NSArray<UIView *> *)tabs {
+  return [segmentedControl.tabs copy];
 }
 
 @end

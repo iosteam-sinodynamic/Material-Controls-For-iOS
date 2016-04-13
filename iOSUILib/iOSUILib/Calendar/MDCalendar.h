@@ -43,14 +43,15 @@ typedef NS_OPTIONS(NSInteger, MDCalendarCellState) {
   MDCalendarCellStateButton = 1 << 7
 };
 
-typedef NS_OPTIONS(NSInteger, MDCalendarTheme) {
+typedef NS_ENUM(NSInteger, MDCalendarTheme) {
   MDCalendarThemeLight = 1,
   MDCalendarThemeDark = 2
 };
 
+NS_ASSUME_NONNULL_BEGIN
 @protocol MDCalendarDelegate <NSObject>
 @required
-- (void)calendar:(MDCalendar *)calendar didSelectDate:(NSDate *)date;
+- (void)calendar:(MDCalendar *)calendar didSelectDate:(nullable NSDate *)date;
 @end
 
 @interface MDCalendar : UIView <UIAppearance>
@@ -61,6 +62,7 @@ typedef NS_OPTIONS(NSInteger, MDCalendarTheme) {
 
 @property(copy, nonatomic) NSDate *currentDate;
 @property(copy, nonatomic) NSDate *selectedDate;
+@property(copy, nonatomic) NSDate *minimumDate;
 @property(copy, nonatomic) NSDate *currentMonth;
 
 @property(assign, nonatomic) MDCalendarTheme theme;
@@ -71,3 +73,4 @@ typedef NS_OPTIONS(NSInteger, MDCalendarTheme) {
 - (void)reloadData;
 
 @end
+NS_ASSUME_NONNULL_END

@@ -23,7 +23,7 @@
 #import "TableViewController.h"
 #import "MockData.h"
 #import "iOSUILib/MDTableViewCell.h"
-#import "iOSUILib/UIFontHelper.h"
+#import "UIFontHelper.h"
 
 @interface TableViewController () <UITableViewDataSource, UITableViewDelegate>
 
@@ -74,7 +74,7 @@ NSString *RowIdentifier = @"RowIdentifier";
 
 - (void)tableView:(UITableView *)tableView
     didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-  NSLog(@"did select row: %i:%i", indexPath.section, indexPath.row);
+  NSLog(@"did select row: %li:%li", (long)indexPath.section, (long)indexPath.row);
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {

@@ -73,7 +73,8 @@
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-  [mdLayer stopEffects];
+  [super touchesCancelled:touches withEvent:event];
+  [mdLayer stopEffectsImmediately];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {

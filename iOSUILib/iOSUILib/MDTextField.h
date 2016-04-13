@@ -22,7 +22,14 @@
 
 #import <UIKit/UIKit.h>
 
-enum ViewState { NORMAL, HIGHLIGHT, ERROR, DISABLED };
+typedef NS_ENUM(NSInteger, MDTextFieldViewState) {
+  MDTextFieldViewStateNormal,
+  MDTextFieldViewStateHighlighted,
+  MDTextFieldViewStateError,
+  MDTextFieldViewStateDisabled
+};
+
+NS_ASSUME_NONNULL_BEGIN
 
 @class AutoResizeTextView, MDTextField;
 
@@ -62,41 +69,46 @@ enum ViewState { NORMAL, HIGHLIGHT, ERROR, DISABLED };
 
 @end
 
-
+NS_ASSUME_NONNULL_END
 @interface MDTextField : UIControl
 
-@property(nonatomic)  NSString *hint;
-@property(nonatomic)  NSString *label;
-@property(nonatomic)  BOOL floatingLabel;
-@property(nonatomic)  BOOL highlightLabel;
-@property(nonatomic)  NSString *errorMessage;
-@property(nonatomic)  int maxCharacterCount;
+@property(null_unspecified, nonatomic) IBInspectable NSString *hint;
+@property(null_unspecified, nonatomic) IBInspectable NSString *label;
+@property(nonatomic) IBInspectable BOOL floatingLabel;
+@property(nonatomic) IBInspectable BOOL highlightLabel;
+@property(null_unspecified, nonatomic) IBInspectable NSString *errorMessage;
+@property(nonatomic) IBInspectable NSInteger maxCharacterCount;
 
-@property(nonatomic)  UIColor *normalColor;
-@property(nonatomic)  UIColor *highlightColor;
-@property(nonatomic)  UIColor *errorColor;
-@property(nonatomic)  UIColor *disabledColor;
-@property(nonatomic)  UIColor *textColor;
-@property(nonatomic)  UIColor *hintColor;
+@property(null_unspecified, nonatomic) IBInspectable UIColor *normalColor;
+@property(null_unspecified, nonatomic) IBInspectable UIColor *highlightColor;
+@property(null_unspecified, nonatomic) IBInspectable UIColor *errorColor;
+@property(null_unspecified, nonatomic) IBInspectable UIColor *disabledColor;
+@property(null_unspecified, nonatomic) IBInspectable UIColor *textColor;
+@property(null_unspecified, nonatomic) IBInspectable UIColor *hintColor;
 
-@property(nonatomic, getter=isEnabled)  BOOL enabled;
-@property(nonatomic)  BOOL autoComplete;
-@property(nonatomic)  BOOL singleLine;
-@property(nonatomic)  BOOL fullWidth;
-@property(nonatomic)  int minVisibleLines;
-@property(nonatomic)  int maxVisibleLines;
-@property(nonatomic)  NSString *text;
-@property(nonatomic)  BOOL secureTextEntry;
+@property(nonatomic, getter=isEnabled) IBInspectable BOOL enabled;
+@property(nonatomic) IBInspectable BOOL autoComplete;
+@property(nonatomic) IBInspectable BOOL singleLine;
+@property(nonatomic) IBInspectable BOOL fullWidth;
+@property(nonatomic) IBInspectable NSInteger minVisibleLines;
+@property(nonatomic) IBInspectable NSInteger maxVisibleLines;
+@property(null_unspecified, nonatomic) IBInspectable NSString *text;
+@property(nonatomic) IBInspectable BOOL secureTextEntry;
+@property(nonatomic) IBInspectable BOOL dividerAnimation;
+@property(nonatomic) IBInspectable BOOL restrictInBounds;
 
 @property(nonatomic) UIReturnKeyType returnKeyType;
 @property(nonatomic) UIKeyboardType keyboardType;
 
 @property(nonatomic) BOOL hasError;
-@property(nonatomic) UIFont *labelsFont;
-@property(nonatomic) UIFont *inputTextFont;
-@property(nonatomic) NSLayoutConstraint *textViewHeightConstraint;
-@property(nonatomic) NSArray *suggestionsDictionary;
+@property(nonnull, nonatomic) UIFont *labelsFont;
+@property(nonnull, nonatomic) UIFont *inputTextFont;
+@property(nonnull, nonatomic) NSLayoutConstraint *textViewHeightConstraint;
+@property(nullable, nonatomic) NSArray<NSString *> *suggestionsDictionary;
 
 @property(nonatomic, weak) id<MDTextFieldDelegate> delegate;
+@property(nonatomic, nullable, readwrite, strong) UIView *inputAccessoryView;
+
+- (float)requiredHeightWithNumberOfTextLines:(NSUInteger)numberOfLines;
 
 @end

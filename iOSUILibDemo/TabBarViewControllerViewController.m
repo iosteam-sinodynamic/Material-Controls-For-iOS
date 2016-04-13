@@ -100,7 +100,10 @@
                                              options:0
                                              metrics:nil
                                                views:viewsDictionary]];
+
+  //  tabBarViewController.selectedIndex = 3;
   self.title = @"MDTabBarViewController";
+  
 }
 
 - (void)didReceiveMemoryWarning {
@@ -115,7 +118,7 @@
   TabContentViewController *controller =
       [[TabContentViewController alloc] init];
   dispatch_async(dispatch_get_main_queue(), ^{
-    [controller setContent:[NSString stringWithFormat:@"Tab %i", index + 1]];
+    [controller setContent:[NSString stringWithFormat:@"Tab %d", (int)index + 1]];
   });
   return controller;
 }
