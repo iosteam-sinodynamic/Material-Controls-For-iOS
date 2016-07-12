@@ -64,6 +64,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property(null_unspecified, nonatomic) UIColor *effectColor;
 
+@property(nonatomic,weak) id delegate;
+
 - (instancetype)initWithSuperLayer:(CALayer *)superLayer;
 - (instancetype)initWithSuperView:(UIView *)superView;
 
